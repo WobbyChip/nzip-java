@@ -118,7 +118,6 @@ public class SuffixArray {
         //We don't need to check for previous bytes, because if SUFFIX_LENGTH would be 3,
         //That would mean that next 2 bytes from current position are the same
         int length = suffixLength;
-        Node node; //Used to iterate over nodes
 
         //Welp, I will try to explain this, but it is kinda hard to visualize:
         //We have "position": 2101 which in buffer corresponds to byte, for example, 0x4F
@@ -134,7 +133,7 @@ public class SuffixArray {
         loop: {
             while (length < lookAheadBufferSize) { //Loop 1 byte forward and compare if nodes do satisfy rules
                 if (position + length >= buffer.length) { break; } //We cannot go outside our buffer of data
-                node = linkedList.head(); //Another place without null checks, because head is -1
+                Node node = linkedList.head(); //Another place without null checks, because head is -1
                 int amount = linkedList.size() - 2; //-2 because we already have head and tail which are not really in here
 
                 //Here we eliminate nodes which do not satisfy the rules
