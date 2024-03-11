@@ -73,8 +73,8 @@ public class Main {
         });
     }
 
-    public static void testCompress() throws IOException {
-        byte[] rawData = Files.readAllBytes(Paths.get("files\\blank.bin"));
+    public static void compress(String filename) throws IOException {
+        byte[] rawData = Files.readAllBytes(Paths.get(filename));
 
         //byte[] compressed = new LZ77().compress(rawData);
         byte[] compressed = new LZ77().compress(rawData, progress -> System.out.print((progress >= 100 ? "\n" : "\r") + "C: " + progress));
@@ -101,5 +101,10 @@ public class Main {
         decompressed = Deflate.decompress(compressed);
         System.out.println("\n Deflate -> C: " + compressed.length + " | D: " + decompressed.length + " | Verify: " + Arrays.equals(rawData, decompressed));
         */
+    }
+
+    public static void testCompress() throws IOException {
+        compress("files\\shrek.txt");
+        compress("files\\1234.txt");
     }
 }
