@@ -138,6 +138,7 @@ public class BitCarry {
     private void clear() {
         this.buffer.clear();
         carry_k = carry = 0;
+        de_carry_k = de_carry = 0;
     }
 
     private void flushCarry() {
