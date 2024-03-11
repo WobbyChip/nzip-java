@@ -84,6 +84,14 @@ public class LinkedList {
         return this;
     }
 
+    //This doesn't do checks, but if we are sure that
+    //next->next node exists then we should not care about it
+    public void removeNextUnsafe(Node node) {
+        node.next().next().setPrev(node);
+        node.setNext(node.next().next());
+        size--;
+    }
+
     public Node head() {
         return head;
     }
@@ -97,12 +105,17 @@ public class LinkedList {
     }
 
     public List<Integer> getList() {
+        return getList(size);
+    }
+
+    public List<Integer> getList(int amount) {
         List<Integer> list = new ArrayList<>();
         Node current = head;
 
-        while (current != null) {
+        while ((current != null) && (amount > 0)) {
             list.add(current.value());
             current = current.next();
+            amount--;
         }
 
         return list;

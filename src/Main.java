@@ -73,16 +73,16 @@ public class Main {
         });
     }
 
-
     public static void testCompress() throws IOException {
-        byte[] rawData = Files.readAllBytes(Paths.get("files\\blank.bin"));
+        byte[] rawData = Files.readAllBytes(Paths.get("files\\youtube.html"));
 
+        //byte[] compressed = new LZ77().compress(rawData);
         byte[] compressed = new LZ77().compress(rawData, progress -> System.out.print((progress >= 100 ? "\n" : "\r") + "C: " + progress));
         byte[] decompressed = new LZ77().decompress(compressed);
         System.out.println("\n LZ77 nzip (Working) -> C: " + compressed.length + " | D: " + decompressed.length + " | Verify: " + Arrays.equals(rawData, decompressed));
         //LZ77 nzip (Working): monkey.bmp -> C: 2942223 | D: 3686550 | Verify: true
         //LZ77 nzip (Working): shrek.txt -> C: 38624 | D: 73534 | Verify: true
-        //LZ77 nzip (Working): blank.bin -> C: 38624 | D: 73534 | Verify: true
+        //LZ77 nzip (Working): blank.bin -> C: 1258 | D: 102400 | Verify: true
 
         /*
         compressed = LZ77Test.compress(rawData, null);

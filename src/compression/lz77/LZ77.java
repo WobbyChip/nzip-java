@@ -5,8 +5,6 @@ import compression.ProgressCallback;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static compression.lz77.SuffixArray.SUFFIX_LENGTH;
-
 public class LZ77 {
     public static int MIN_DATA_LENGTH = 3; //This is because encoded reference\token uses 3 bytes
 
@@ -14,8 +12,8 @@ public class LZ77 {
     //So in the end we will have range [4; 259] - 4 => [0, 255]
     public static int LOOK_AHEAD_BUFFER_SIZE = (1 << 8) + MIN_DATA_LENGTH;
 
-    //TODO!!! Apply same logic in here, distance cannot less than 3, so we can have extra bytes in distance
-    public static int SEARCH_BUFFER_SIZE = (1 << 16); //65536 which is 2 bytes used in encoding
+    //Apply same logic in here, distance cannot be less than 3, so we can have extra bytes in distance
+    public static int SEARCH_BUFFER_SIZE = (1 << 16) + MIN_DATA_LENGTH + 1; //[0; 65535] which is 2 bytes used in encoding
 
     public byte[] compress(byte[] data) {
         return compress(data, null);
@@ -23,17 +21,18 @@ public class LZ77 {
 
     public byte[] compress(byte[] data, ProgressCallback callback) {
         if (data.length == 0) { return data; }
-        SuffixArray suffixArray = new SuffixArray(data, LOOK_AHEAD_BUFFER_SIZE, SEARCH_BUFFER_SIZE);
+        SuffixArray suffixArray = new SuffixArray(data, LOOK_AHEAD_BUFFER_SIZE, SEARCH_BUFFER_SIZE, MIN_DATA_LENGTH);
         BitCarry bitCarry = new BitCarry(); //Used to easily add data with ref bit
         int position = 0;
 
-        while (position < data.length - SUFFIX_LENGTH - 1) {
-            int[] reference = suffixArray.nextReference(position);
-            int distance = position - reference[1]; //Offset, aka, how much to go back
+        while (position < data.length - MIN_DATA_LENGTH - 1) {
+            int[] reference = suffixArray.nextLongestMatch(position);
             int length = reference[0]; //Length of repeating data
 
             if (length > MIN_DATA_LENGTH) {
                 //If length more than 3 then encode distance and length and push them to bit carry
+                //-1 because (1 << 8): 256, 256 is out of range for byte [0; 255], and -MIN_DATA_LENGTH, because if (length > MIN_DATA_LENGTH)
+                int distance = position - reference[1] - MIN_DATA_LENGTH - 1; //Offset, aka, how much to go back
                 bitCarry.pushBytes(true, ((length - MIN_DATA_LENGTH - 1) & 0xff), ((distance >> 8) & 0xff), (distance & 0xff));
                 position += length;
             } else {
@@ -71,7 +70,7 @@ public class LZ77 {
             }
 
             int length = (e.data()[0] & 0xff) + MIN_DATA_LENGTH + 1;
-            int distance = (e.data()[1] & 0xff) << 8 | (e.data()[2] & 0xff);
+            int distance = ((e.data()[1] & 0xff) << 8 | (e.data()[2] & 0xff)) + MIN_DATA_LENGTH + 1;
 
             for (int i = 0; i < length; i++) {
                 output.add(output.get(position.get() - distance + i));
