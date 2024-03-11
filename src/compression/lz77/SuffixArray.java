@@ -31,22 +31,7 @@ public class SuffixArray {
         this.suffixArray = new MultiDimensionalArray<>(suffixLength, ALPHABET_SIZE);
     }
 
-    //Same logic as createSuffixArray(), but it just removes positions and lists
-    private void clearSuffixArray(int from, int to) {
-        if (to + suffixLength - 1 > buffer.length) { to = buffer.length - suffixLength - 1; }
-        if (from < 0) { from = 0; }
-
-        for (int i = from; i < to; i++) {
-            int[] indexes = new int[suffixLength];
-            for (int k = 0; k < suffixLength; k++) { indexes[k] = (buffer[i+k] & 0xff); }
-            ArrayList<Integer> arrayList = suffixArray.getValue(indexes);
-
-            if (arrayList == null) { continue; }
-            arrayList.remove((Object) i);
-            if (arrayList.isEmpty()) { suffixArray.setValue(null, indexes); }
-        }
-    }
-
+    //https://i.imgur.com/QQorJy6.png
     private void createSuffixArray(int position) {
         int diff = position - lastPos;
         if (diff == 0) { return; }
@@ -80,6 +65,22 @@ public class SuffixArray {
             ArrayList<Integer> arrayList = suffixArray.getValue(indexes); //Just get array list of positions for combination which is indexes
             if (arrayList == null) { arrayList = suffixArray.setValue(new ArrayList<>(), indexes); } //Create new array if it doesn't exist for this combination
             arrayList.add(i); //For combination add place of appearance
+        }
+    }
+
+    //Same logic as createSuffixArray(), but it just removes positions and lists
+    private void clearSuffixArray(int from, int to) {
+        if (to + suffixLength - 1 > buffer.length) { to = buffer.length - suffixLength - 1; }
+        if (from < 0) { from = 0; }
+
+        for (int i = from; i < to; i++) {
+            int[] indexes = new int[suffixLength];
+            for (int k = 0; k < suffixLength; k++) { indexes[k] = (buffer[i+k] & 0xff); }
+            ArrayList<Integer> arrayList = suffixArray.getValue(indexes);
+
+            if (arrayList == null) { continue; }
+            arrayList.remove((Object) i);
+            if (arrayList.isEmpty()) { suffixArray.setValue(null, indexes); }
         }
     }
 
