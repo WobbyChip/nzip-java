@@ -138,7 +138,7 @@ public class SuffixArray {
 
                 //Here we eliminate nodes which do not satisfy the rules
                 for (int i = 0; i < amount; i++) {
-                    int value = node.next().value();
+                    int value = node.next().value(); //This value is index of repeating data
                     boolean arg0 = (value + length >= buffer.length); //And again, we cannot go outside our buffer of data
                     boolean arg1 = arg0 || (value + length >= position); //And we cannot go outside current position, because we search patterns in past to compress what is in front
                     boolean arg2 = arg1 || (buffer[value + length] != buffer[position + length]); //Check if data: [node offset + length] = [position + length]
