@@ -127,7 +127,7 @@ public class SuffixArray {
         //Also we need to check for boundaries, we cannot exceed buffer or go outside current position: arg0, arg1
         //In the end we will be left with 1 node, that has the biggest length match
 
-        //TODO!!! Implement cycling data: 12341234124 -> 1234<4, 8>, copy 1234 2 times in cycle
+        //TODO!!! Implement cycling data: 12341234124 -> 1234<8, 4>, copy 1234 2 times in cycle
         //TODO!!! This means if index goes outside of current position or byte does not match
         //TODO!!! Go back at the index and check if that works
 
