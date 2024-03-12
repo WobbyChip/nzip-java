@@ -65,8 +65,9 @@ public class LZ77 {
 
         new BitCarry().decodeBytes(data, 3).forEachRemaining(e -> {
             if (!e.bRefBit()) {
-                output.add(e.data()[0]);
-                position.addAndGet(1);
+                //This part was left from test, but I will not remove it, in case if I want to test again
+                for (int i = 0; i < e.data().length; i++) { output.add(e.data()[i]); }
+                position.addAndGet(e.data().length);
                 return;
             }
 

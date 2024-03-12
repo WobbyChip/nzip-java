@@ -47,19 +47,19 @@ public class BitCarry {
         //System.out.println("R: " + formatByte(carry));
     }
 
-    public void pushBytes(boolean bRefBit, byte... bytes) {
+    public void pushBytes(boolean bRefBit, byte... data) {
         boolean addRefBit = true;
 
-        for (byte value : bytes) {
+        for (byte value : data) {
             this.pushByte(value, bRefBit, addRefBit);
             addRefBit = !bRefBit;
         }
     }
 
-    public void pushBytes(boolean bRefBit, int... integers) {
+    public void pushBytes(boolean bRefBit, int... data) {
         boolean addRefBit = true;
 
-        for (int value : integers) {
+        for (int value : data) {
             this.pushByte((byte) value, bRefBit, addRefBit);
             addRefBit = !bRefBit;
         }
