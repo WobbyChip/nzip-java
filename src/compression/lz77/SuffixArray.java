@@ -137,7 +137,7 @@ public class SuffixArray {
             while (length < lookAheadBufferSize) { //Loop 1 byte forward and compare if nodes do satisfy rules
                 if (position + length >= buffer.length) { break; } //We cannot go outside our buffer of data
                 Node node = linkedList.head(); //Another place without null checks, because head is -1
-                int amount = linkedList.size() - 2; //-2 because we already have head and tail which are not really in here
+                int amount = linkedList.size() - 2; //-2 because we already have head and tail which are not really used in here
 
                 //Here we eliminate nodes which do not satisfy the rules
                 for (int i = 0; i < amount; i++) {
