@@ -144,7 +144,7 @@ public class SuffixArray {
 
                     if (match) { continue; } //If this index satisfy rules, keep it
                     if (indexesList.size() == 1) { break loop; } //In this case we are left with final index, which is the biggest match
-                    iterator.remove(); //Remove index, because data either didn't match
+                    iterator.remove(); //Remove index, because data didn't match
                 }
 
                 length++;
