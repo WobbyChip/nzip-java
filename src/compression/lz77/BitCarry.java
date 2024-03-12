@@ -156,11 +156,11 @@ public class BitCarry {
         return String.format("%8s", Integer.toBinaryString(value & 0xFF)).replace(' ', '0');
     }
 
-    public static byte[] copyBytes(List<Byte> array) {
-        byte[] byteArray = new byte[array.size()];
+    public static byte[] copyBytes(List<Byte> list) {
+        byte[] byteArray = new byte[list.size()];
 
-        for (int i = 0; i < array.size(); i++) {
-            byteArray[i] = array.get(i);
+        for (int i = 0; i < list.size(); i++) {
+            byteArray[i] = list.get(i);
         }
 
         return byteArray;
