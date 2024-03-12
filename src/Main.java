@@ -1,5 +1,4 @@
 import compression.lz77.BitCarry;
-import compression.lz77.LinkedList;
 import compression.lz77.MultiDimensionalArray;
 import compression.lz77.LZ77;
 
@@ -14,33 +13,6 @@ public class Main {
     public static void main(String[] args) throws IOException {
         testCompress();
         //testCarry();
-        //testLinkedList();
-        //testMultiDimensionalArray();
-    }
-
-    public static void testMultiDimensionalArray() {
-        MultiDimensionalArray<ArrayList<Integer>> md = new MultiDimensionalArray<>(3, 10);
-        md.setValue(new ArrayList<>(), 20, 0, 0);
-        System.out.println(md.getValue(20, 0, 0));
-        System.out.println(md.getValue(0, 0, 0));
-    }
-
-    public static void testLinkedList() {
-        LinkedList linkedList = new LinkedList();
-        linkedList.insertAfterHead(-2);
-        linkedList.insertAfterHead(-9);
-        linkedList.insertAfterHead(-3);
-        linkedList.insert(-5);
-
-        //-5 -2 -3 -9
-
-        //linkedList.remove(linkedList.head().next());
-        linkedList.remove(linkedList.tail());
-
-        System.out.println(linkedList.size());
-        System.out.println(linkedList.head().value());
-        System.out.println(linkedList.head().next().value());
-        System.out.println(linkedList.tail().value());
     }
 
     public static void testCarry() {
@@ -101,12 +73,13 @@ public class Main {
     }
 
     public static void testCompress() throws IOException {
-        compress("test.txt"); //(test.txt) -> C: 39945 | D: 184207 | R: 184207 | Verify: true
         compress("shrek.txt"); //(shrek.txt) -> C: 38170 | D: 70658 | R: 70658 | Verify: true
-        compress("1234.txt"); //(1234.txt) -> C: 2424 | D: 200448 | R: 200448 | Verify: true
         compress("small.txt"); //(small.txt) -> C: 60 | D: 80 | R: 80 | Verify: true
+        compress("empty.txt"); //(empty.txt) -> C: 0 | D: 0 | R: 0 | Verify: true
+        compress("screenshot.png"); //(screenshot.png) -> C: 723081 | D: 645096 | R: 645096 | Verify: true
+        compress("test.txt"); //(test.txt) -> C: 39945 | D: 184207 | R: 184207 | Verify: true
+        compress("1234.txt"); //(1234.txt) -> C: 2424 | D: 200448 | R: 200448 | Verify: true
         compress("blank.bin"); //(blank.bin) -> C: 1239 | D: 102400 | R: 102400 | Verify: true
         compress("monkey.bmp"); //(monkey.bmp) -> C: 2930208 | D: 3686550 | R: 3686550 | Verify: true
-        compress("screenshot.png"); //(screenshot.png) -> C: 723081 | D: 645096 | R: 645096 | Verify: true
     }
 }
