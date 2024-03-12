@@ -113,6 +113,7 @@ public class SuffixArray {
 
             if (position - indexes.get(i) >= searchBufferSize) { break; } //Don't include indexes which go outisde search buffer size
             linkedList.insertAfterHead(indexes.get(i)); //Add those who do to linked list
+            linkedList.head().next().setLength(-1);
         }
 
         //We don't need to check for previous bytes, because if SUFFIX_LENGTH would be 3,
@@ -126,9 +127,9 @@ public class SuffixArray {
         //Also we need to check for boundaries, we cannot exceed buffer or go outside current position: arg0, arg1
         //In the end we will be left with 1 node, that has the biggest length match
 
-        //TODO!!! Implement cycling data: 12341234124 -> 1234<8, 4>, copy 1234 2 times in cycle
-        //TODO!!! This means if index goes outside of current position or byte does not match
-        //TODO!!! Go back at the index and check if that works
+        //Implement cycling data: 12341234124 -> 1234<8, 4>, copy 1234 2 times in cycle
+        //This means if index goes outside of current position go back at the index and
+        //check if that works (DONE)
 
         loop: {
             while (length < lookAheadBufferSize) { //Loop 1 byte forward and compare if nodes do satisfy rules
@@ -138,14 +139,17 @@ public class SuffixArray {
 
                 //Here we eliminate nodes which do not satisfy the rules
                 for (int i = 0; i < amount; i++) {
-                    int value = node.next().value(); //This value is index of repeating data
-                    boolean arg0 = (value + length >= buffer.length); //And again, we cannot go outside our buffer of data
-                    boolean arg1 = arg0 || (value + length >= position); //And we cannot go outside current position, because we search patterns in past to compress what is in front
-                    boolean arg2 = arg1 || (buffer[value + length] != buffer[position + length]); //Check if data: [node offset + length] = [position + length]
+                    int value = node.next().index(); //This value is index of repeating data
+                    int node_length = node.next().length(); //Length for node were data stops to
+                    int rlength = ((node_length > -1) ? (length % node_length) : length);
 
-                    if (!arg2) { node = node.next(); continue; } //If this node satisfy rules, keep it
+                    boolean arg0 = (value + rlength >= position); //And we cannot (NOW WE CAN) go outside current position, because we search patterns in past to compress what is in front
+                    boolean arg1 = (buffer[value + rlength] == buffer[position + length]); //Check if data: [node offset + length] = [position + length]
+
+                    if (!arg0 && arg1) { node = node.next(); continue; } //If this node satisfy rules, keep it
                     if (linkedList.size() - 2 == 1) { break loop; } //In this case we are left with final node, which is the biggest match
-                    linkedList.removeNextUnsafe(node); //Remove node, because data either didn't match or it went outside the boundaries
+                    if ((node_length == -1) && arg0) { node.next().setLength(length); i--; continue; } //If we are outside of position, go back and try to check data again
+                    linkedList.removeNextUnsafe(node); //Remove node, because data either didn't match
                 }
 
                 length++;
@@ -153,7 +157,7 @@ public class SuffixArray {
         }
 
         //In case of no nodes left: head -> tails and value of tail is -1
-        int offset = linkedList.head().next().value();
+        int offset = linkedList.head().next().index();
         return new int[] { (offset > -1 ? length : -1), offset };
     }
 }
