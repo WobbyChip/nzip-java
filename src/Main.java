@@ -38,9 +38,9 @@ public class Main {
         linkedList.remove(linkedList.tail());
 
         System.out.println(linkedList.size());
-        System.out.println(linkedList.head().index());
-        System.out.println(linkedList.head().next().index());
-        System.out.println(linkedList.tail().index());
+        System.out.println(linkedList.head().value());
+        System.out.println(linkedList.head().next().value());
+        System.out.println(linkedList.tail().value());
     }
 
     public static void testCarry() {
@@ -101,12 +101,12 @@ public class Main {
     }
 
     public static void testCompress() throws IOException {
-        compress("monkey.bmp"); //(monkey.bmp) -> C: 2932868 | D: 3686550 | R: 3686550 | Verify: true
-        compress("shrek.txt"); //(shrek.txt) -> C: 38177 | D: 70658 | R: 70658 | Verify: true
+        compress("test.txt"); //(test.txt) -> C: 39945 | D: 184207 | R: 184207 | Verify: true
+        compress("shrek.txt"); //(shrek.txt) -> C: 38170 | D: 70658 | R: 70658 | Verify: true
         compress("1234.txt"); //(1234.txt) -> C: 2424 | D: 200448 | R: 200448 | Verify: true
-        compress("test.txt"); //(test.txt) -> C: 39952 | D: 184207 | R: 184207 | Verify: true
-        compress("small.txt"); //(small.txt) -> C: 64 | D: 80 | R: 80 | Verify: true
-        compress("blank.bin"); //(blank.bin) -> C: 1242 | D: 102400 | R: 102400 | Verify: true
-        compress("screenshot.png"); //(screenshot.png) -> C: 723090 | D: 645096 | R: 645096 | Verify: true
+        compress("small.txt"); //(small.txt) -> C: 60 | D: 80 | R: 80 | Verify: true
+        compress("blank.bin"); //(blank.bin) -> C: 1239 | D: 102400 | R: 102400 | Verify: true
+        compress("monkey.bmp"); //(monkey.bmp) -> C: 2930208 | D: 3686550 | R: 3686550 | Verify: true
+        compress("screenshot.png"); //(screenshot.png) -> C: 723081 | D: 645096 | R: 645096 | Verify: true
     }
 }

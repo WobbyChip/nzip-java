@@ -3,13 +3,12 @@ package compression.lz77;
 //Just a simple node implementation: https://www.geeksforgeeks.org/implementing-a-linked-list-in-java-using-class/
 
 public class Node {
-    private int length;
-    private int index;
+    private int value;
     private Node next;
     private Node prev;
 
-    public Node(int index) {
-        this.index = index;
+    public Node(int value) {
+        this.value = value;
     }
 
     public Node(int value, Node next) {
@@ -22,11 +21,8 @@ public class Node {
         this.prev = prev;
     }
 
-    public int index() {
-        return index;
-    }
-    public int length() {
-        return length;
+    public int value() {
+        return value;
     }
 
     public Node next() {
@@ -45,10 +41,7 @@ public class Node {
         this.prev = prev;
     }
 
-    public void setIndex(int index) {
-        this.index = index;
-    }
-    public void setLength(int length) {
-        this.length = length;
+    public void setValue(int value) {
+        this.value = value;
     }
 }

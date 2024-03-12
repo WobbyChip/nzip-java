@@ -113,7 +113,7 @@ public class LinkedList {
         Node current = head;
 
         while ((current != null) && (amount > 0)) {
-            list.add(current.index());
+            list.add(current.value());
             current = current.next();
             amount--;
         }

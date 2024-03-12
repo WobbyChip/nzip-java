@@ -111,10 +111,12 @@ public class SuffixArray {
             //                             <- position
             //linkedList: [-1 587 620 623 626 1797 2175 -1]  We insert after head, because we need to preserve same order, but loop goes backwards
 
-            if (position - indexes.get(i) >= searchBufferSize) { break; } //Don't include indexes which go outisde search buffer size
-            linkedList.insertAfterHead(indexes.get(i)); //Add those who do to linked list
-            linkedList.head().next().setLength(-1);
+            int index = indexes.get(i);
+            if (position - index >= searchBufferSize) { break; } //Don't include indexes which go outisde search buffer size
+            if (index < position) { linkedList.insertAfterHead(index); }; //Add those who do to linked list
         }
+
+        if (linkedList.size() == 2) { return new int[] { -1, -1 }; }
 
         //We don't need to check for previous bytes, because if SUFFIX_LENGTH would be 3,
         //That would mean that next 2 bytes from current position are the same
@@ -139,16 +141,13 @@ public class SuffixArray {
 
                 //Here we eliminate nodes which do not satisfy the rules
                 for (int i = 0; i < amount; i++) {
-                    int value = node.next().index(); //This value is index of repeating data
-                    int node_length = node.next().length(); //Length for node were data stops to
-                    int rlength = ((node_length > -1) ? (length % node_length) : length);
+                    int index = node.next().value(); //This value is index of repeating data
+                    boolean outside = (index + length >= position); //And we cannot (NOW WE CAN) go outside current position, because we search patterns in past to compress what is in front
+                    int rlength = (outside ? (length % (position - index)) : length); //If we are outside position, we need to go back and check for repeating data
+                    boolean match = (buffer[index + rlength] == buffer[position + length]); //Check if data: [node offset + length] = [position + length]
 
-                    boolean arg0 = (value + rlength >= position); //And we cannot (NOW WE CAN) go outside current position, because we search patterns in past to compress what is in front
-                    boolean arg1 = (buffer[value + rlength] == buffer[position + length]); //Check if data: [node offset + length] = [position + length]
-
-                    if (!arg0 && arg1) { node = node.next(); continue; } //If this node satisfy rules, keep it
+                    if (match) { node = node.next(); continue; } //If this node satisfy rules, keep it
                     if (linkedList.size() - 2 == 1) { break loop; } //In this case we are left with final node, which is the biggest match
-                    if ((node_length == -1) && arg0) { node.next().setLength(length); i--; continue; } //If we are outside of position, go back and try to check data again
                     linkedList.removeNextUnsafe(node); //Remove node, because data either didn't match
                 }
 
@@ -157,7 +156,7 @@ public class SuffixArray {
         }
 
         //In case of no nodes left: head -> tails and value of tail is -1
-        int offset = linkedList.head().next().index();
+        int offset = linkedList.head().next().value();
         return new int[] { (offset > -1 ? length : -1), offset };
     }
 }
