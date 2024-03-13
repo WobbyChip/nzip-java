@@ -23,6 +23,7 @@ public class BitCarry {
     public BitCarry(byte[] data) { this.data = data; }
 
     public void pushBits(byte data, int size) {
+        if (size > 8) { throw new RuntimeException("max size is 8 bits"); }
         data = (byte) ((data & 0xff) << (8 - size)); //Convert data to comfortable format : 00000101 => 10100000
 
         while (size > 0) {
