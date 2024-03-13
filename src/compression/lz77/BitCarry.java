@@ -9,7 +9,7 @@ public class BitCarry {
     //If the bit is 0 then data is a normal byte, otherwise it is encoded data
     //We also can save space by not adding 1 bit to each byte of encoded data, but only to first, but this requires to know size of encoded data
 
-    public record BitData(boolean bRefBit, byte[] data) {}
+    public record RefData(boolean bRefBit, byte[] data) {}
 
     private final ArrayList<Byte> buffer = new ArrayList<>(); //With list it will be faster to add data, but worse for memory usage
     private byte[] data = new byte[0];
@@ -93,16 +93,16 @@ public class BitCarry {
         return getBits(8);
     }
 
-    private BitData getBitData(int dataSize) {
+    private RefData getRefData(int dataSize) {
         boolean bRefBit = getBits(1) == 1;
         int k = bRefBit ? dataSize : 1;
         byte[] bitBuffer = new byte[k];
 
         for (int i = 0; i < k; i++) { bitBuffer[i] = getByte(); }
-        return new BitData(bRefBit, bitBuffer);
+        return new RefData(bRefBit, bitBuffer);
     }
 
-    public Iterator<BitData> decodeBytes(int dataSize) {
+    public Iterator<RefData> decodeBytes(int dataSize) {
         this.clear();
         pos = -1;
 
@@ -113,8 +113,8 @@ public class BitCarry {
             }
 
             @Override
-            public BitData next() {
-                return getBitData(dataSize);
+            public RefData next() {
+                return getRefData(dataSize);
             }
         };
     }
@@ -148,5 +148,11 @@ public class BitCarry {
         }
 
         return byteArray;
+    }
+
+    public static List<Byte> copyBytes(byte[] array) {
+        ArrayList<Byte> byteList = new ArrayList<>();
+        for (byte b : array) { byteList.add(b); }
+        return byteList;
     }
 }
