@@ -67,7 +67,7 @@ public class LZ77 {
         AtomicInteger position = new AtomicInteger();
         ArrayList<Byte> output = new ArrayList<>();
 
-        new BitCarry().decodeBytes(data, 3).forEachRemaining(e -> {
+        new BitCarry(data).decodeBytes(3).forEachRemaining(e -> {
             if (!e.bRefBit()) {
                 //This part was left from test, but I will not remove it, in case if I want to test again
                 for (int i = 0; i < e.data().length; i++) { output.add(e.data()[i]); }

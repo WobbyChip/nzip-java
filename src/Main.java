@@ -35,7 +35,11 @@ public class Main {
 
         System.out.println();
 
-        bitCarry.decodeBytes(buffer, 3).forEachRemaining(e -> {
+        //BitCarry bitCarry1 = new BitCarry(buffer);
+        //System.out.println("T: " + BitCarry.formatByte(bitCarry1.getBits(8)));
+        //System.out.println("T: " + BitCarry.formatByte(bitCarry1.getBits(8)));
+
+        new BitCarry(buffer).decodeBytes(3).forEachRemaining(e -> {
             for (byte b : e.data()) {
                 System.out.print(BitCarry.formatByte(b) + " ");
             }
