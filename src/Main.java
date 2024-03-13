@@ -1,5 +1,4 @@
 import compression.lz77.BitCarry;
-import compression.lz77.MultiDimensionalArray;
 import compression.lz77.LZ77;
 
 import java.io.IOException;
