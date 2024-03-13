@@ -65,24 +65,23 @@ public class BitCarry {
         if (size > 8) { throw new RuntimeException("max size is 8 bits"); }
         if (reset) { carry_k = carry = 0; }
 
-        while (carry_k != size) {
-            if (de_carry_k == 0) {
-                pos += 1;
-                de_carry = data[pos];
-                de_carry_k = 8;
-            }
-
-            int move_carry_k = Math.min((size - carry_k), de_carry_k); //How many we can move
-            //System.out.println("{ move_carry_k: " + move_carry_k + " carry: " + formatByte(carry) + " de_carry: " + formatByte(de_carry) + " carry_k: " + carry_k + " }");
-
-            carry |= (byte) ((de_carry & 0xff) >> carry_k); //Move bits from de_carry to carry
-            de_carry = (byte) ((de_carry & 0xff) << move_carry_k); //Update left bits in de_carry, move them to right
-
-            carry_k += move_carry_k; //Update how many we are carrying in carry
-            de_carry_k -= move_carry_k; //Update how many we are carrying in de_carry
+        if (de_carry_k == 0) {
+            pos += 1;
+            de_carry = data[pos];
+            de_carry_k = 8;
         }
 
+        int move_carry_k = Math.min((size - carry_k), de_carry_k); //How many we can move
+        //System.out.println("{ move_carry_k: " + move_carry_k + " carry: " + formatByte(carry) + " de_carry: " + formatByte(de_carry) + " carry_k: " + carry_k + " }");
+
+        carry |= (byte) ((de_carry & 0xff) >> carry_k); //Move bits from de_carry to carry
+        de_carry = (byte) ((de_carry & 0xff) << move_carry_k); //Update left bits in de_carry, move them to right
+
+        carry_k += move_carry_k; //Update how many we are carrying in carry
+        de_carry_k -= move_carry_k; //Update how many we are carrying in de_carry
+
         //Maybe there was not enough bits in de_carry
+        if ((carry_k != size)) { return getBits(size, false); }
         return (byte) ((carry & 0xff) >> (8 - size));
     }
 
