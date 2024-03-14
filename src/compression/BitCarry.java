@@ -13,7 +13,7 @@ public class BitCarry {
     private byte carry = 0; //Carrying byte, for example, 0b1101000
     private long carry_long = 0; //Carrying long, for example, 0b1101000(56)
     private int carry_k = 0; //How many bits we are carrying right now
-    public byte de_carry = 0; //Carrying byte for decoding
+    private byte de_carry = 0; //Carrying byte for decoding
     private int de_carry_k = 0; //How many bits we are carrying right now
     protected int pos = -1; //Position used in decoding data
 
