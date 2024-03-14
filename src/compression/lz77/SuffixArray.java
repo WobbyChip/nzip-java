@@ -53,7 +53,7 @@ public class SuffixArray {
         if (diff == 0) { return; }
         if (diff < 0) { throw new RuntimeException("going back not implemented"); }
 
-        //I really can't tell if this works properly or no, and are there any memory leaks
+        //I REALLY CAN'T TELL IF THIS WORKS PROPERLY OR NO, AND ARE THERE ANY MEMORY LEAKS
         //Clear buffer in the past, this will have hit on performance, but least we will not run out of memory
         clearSuffixes((lastPos - searchBufferSize), (position - searchBufferSize));
 

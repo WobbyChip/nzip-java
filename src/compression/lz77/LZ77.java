@@ -1,5 +1,6 @@
 package compression.lz77;
 
+import compression.BitCarry;
 import compression.ProgressCallback;
 
 import java.util.ArrayList;
@@ -26,7 +27,7 @@ public class LZ77 {
     public byte[] compress(byte[] data, ProgressCallback callback) {
         if (data.length == 0) { return data; }
         SuffixArray suffixArray = new SuffixArray(data, LOOK_AHEAD_BUFFER_SIZE, SEARCH_BUFFER_SIZE, MIN_DATA_LENGTH);
-        BitCarry bitCarry = new BitCarry(); //Used to easily add data with ref bit
+        Codec bitCarry = new Codec(); //Used to easily add data with ref bit
         int position = 0;
 
         while (position < data.length - MIN_DATA_LENGTH) {
@@ -67,7 +68,7 @@ public class LZ77 {
         AtomicInteger position = new AtomicInteger();
         ArrayList<Byte> output = new ArrayList<>();
 
-        new BitCarry(data).decodeBytes(3).forEachRemaining(e -> {
+        new Codec(data).decodeBytes(3).forEachRemaining(e -> {
             if (!e.bRefBit()) {
                 //This part was left from test, but I will not remove it, in case if I want to test again
                 for (int i = 0; i < e.data().length; i++) { output.add(e.data()[i]); }
