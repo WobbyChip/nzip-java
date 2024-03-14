@@ -1,7 +1,6 @@
-package compression;
+package compression.helper;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class BitCarry {
@@ -14,7 +13,7 @@ public class BitCarry {
     private byte carry = 0; //Carrying byte, for example, 0b1101000
     private long carry_long = 0; //Carrying long, for example, 0b1101000(56)
     private int carry_k = 0; //How many bits we are carrying right now
-    private byte de_carry = 0; //Carrying byte for decoding
+    public byte de_carry = 0; //Carrying byte for decoding
     private int de_carry_k = 0; //How many bits we are carrying right now
     protected int pos = -1; //Position used in decoding data
 
@@ -78,6 +77,12 @@ public class BitCarry {
         return (byte) getBits(8);
     }
 
+    public byte[] getBytes(int size) {
+        byte[] buffer = new byte[size];
+        for (int i = 0; i < size; i++) { buffer[i] = getByte(); }
+        return buffer;
+    }
+
     protected void clear() {
         this.buffer.clear();
         carry_k = carry = 0;
@@ -93,6 +98,10 @@ public class BitCarry {
     public byte[] getBytes(boolean flush) {
         if (flush) { this.flushCarry(); }
         return copyBytes(buffer);
+    }
+
+    public int availableBits() {
+        return (data.length - (pos+1))*8 + de_carry_k;
     }
 
     public static String formatLong(long value) {

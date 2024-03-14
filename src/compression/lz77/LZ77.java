@@ -1,12 +1,14 @@
 package compression.lz77;
 
-import compression.BitCarry;
-import compression.ProgressCallback;
+import compression.helper.BitCarry;
+import compression.helper.ProgressCallback;
 
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class LZ77 {
+    public static int REFERENCE_LENGTH = 3;
+
     //This is because encoded reference uses 3 bytes + 1 bit while raw data uses 3 bytes and 3 bits
     //Yes, we can set it to 3, because 25 < 27, but then we sacrifice length, so in average file it will get worse
     public static int MIN_DATA_LENGTH = 4;
@@ -20,14 +22,14 @@ public class LZ77 {
 
     public static int SEARCH_BUFFER_SIZE = (1 << 16) + MIN_DATA_DISTANCE; //[0; 65535] which is 2 bytes used in encoding
 
-    public byte[] compress(byte[] data) {
+    public static byte[] compress(byte[] data) {
         return compress(data, null);
     }
 
-    public byte[] compress(byte[] data, ProgressCallback callback) {
+    public static byte[] compress(byte[] data, ProgressCallback callback) {
         if (data.length == 0) { return data; }
         SuffixArray suffixArray = new SuffixArray(data, LOOK_AHEAD_BUFFER_SIZE, SEARCH_BUFFER_SIZE, MIN_DATA_LENGTH);
-        Codec bitCarry = new Codec(); //Used to easily add data with ref bit
+        LZ77Encoder bitCarry = new LZ77Encoder(); //Used to easily add data with ref bit
         int position = 0;
 
         while (position < data.length - MIN_DATA_LENGTH) {
@@ -59,16 +61,16 @@ public class LZ77 {
         return bitCarry.getBytes(true);
     }
 
-    public byte[] decompress(byte[] data) {
+    public static byte[] decompress(byte[] data) {
         return decompress(data, null);
     }
 
-    public byte[] decompress(byte[] data, ProgressCallback callback) {
+    public static byte[] decompress(byte[] data, ProgressCallback callback) {
         if (data.length == 0) { return data; }
         AtomicInteger position = new AtomicInteger();
         ArrayList<Byte> output = new ArrayList<>();
 
-        new Codec(data).decodeBytes(3).forEachRemaining(e -> {
+        new LZ77Encoder(data).decodeBytes(REFERENCE_LENGTH).forEachRemaining(e -> {
             if (!e.bRefBit()) {
                 //This part was left from test, but I will not remove it, in case if I want to test again
                 for (int i = 0; i < e.data().length; i++) { output.add(e.data()[i]); }
@@ -84,9 +86,10 @@ public class LZ77 {
             }
 
             position.addAndGet(length);
-            if (callback != null) { callback.onProgress((float) position.get()/data.length*100); }
+            if (callback != null) { callback.onProgress((float) e.position()/data.length*100); }
         });
 
+        if (callback != null) { callback.onProgress((float) 100); }
         return BitCarry.copyBytes(output);
     }
 }

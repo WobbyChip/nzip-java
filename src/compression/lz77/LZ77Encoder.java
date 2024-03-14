@@ -1,13 +1,13 @@
 package compression.lz77;
 
-import compression.BitCarry;
+import compression.helper.BitCarry;
 
 import java.util.Iterator;
 
-public class Codec extends BitCarry {
-    public Codec() { super(); }
-    public Codec(byte[] data) { super(data); }
-    public record RefData(boolean bRefBit, byte[] data) {}
+public class LZ77Encoder extends BitCarry {
+    public LZ77Encoder() { super(); }
+    public LZ77Encoder(byte[] data) { super(data); }
+    public record RefData(boolean bRefBit, int position, byte[] data) {}
 
     public void pushBytes(boolean bRefBit, int... data) {
         if (bRefBit) { pushBits(1, 1); }
@@ -20,11 +20,7 @@ public class Codec extends BitCarry {
 
     private RefData getRefData(int dataSize) {
         boolean bRefBit = getBits(1) == 1;
-        int k = bRefBit ? dataSize : 1;
-        byte[] bitBuffer = new byte[k];
-
-        for (int i = 0; i < k; i++) { bitBuffer[i] = getByte(); }
-        return new RefData(bRefBit, bitBuffer);
+        return new RefData(bRefBit, pos, getBytes(bRefBit ? dataSize : 1));
     }
 
     public Iterator<RefData> decodeBytes(int dataSize) {

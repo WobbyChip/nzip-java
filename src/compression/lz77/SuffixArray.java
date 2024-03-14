@@ -66,8 +66,10 @@ public class SuffixArray {
     }
 
     private void createSuffixes(int from, int to) {
-        if (to + suffixLength - 1 > buffer.length) { to = buffer.length - suffixLength - 1; }
+        if (to + suffixLength - 1 > buffer.length) { to = buffer.length - suffixLength; }
         if (from < 0) { from = 0; }
+
+        //System.out.println("[clearSuffixes]: { " + from + " " + to + " }");
 
         //Initialize lists for all possible combinations to store their index
         for (int i = from; i < to; i++) { getIndexesData(i, true).add(i); }
@@ -75,7 +77,7 @@ public class SuffixArray {
 
     //Same logic as createSuffixes(), but it just removes indexes and lists
     private void clearSuffixes(int from, int to) {
-        if (to + suffixLength - 1 > buffer.length) { to = buffer.length - suffixLength - 1; }
+        if (to + suffixLength - 1 > buffer.length) { to = buffer.length - suffixLength; }
         if (from < 0) { from = 0; }
 
         for (int i = from; i < to; i++) {
