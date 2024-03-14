@@ -1,9 +1,9 @@
 package compression.huffman;
 
-import compression.helper.BitCarry;
-import compression.helper.ProgressCallback;
+import compression.BitCarry;
 
 import java.util.*;
+import java.util.function.Consumer;
 
 public class HufmanEncoder {
     public static int MAX_FREQUENCY_BITS_LENGTH = 6; //Frequency is integer, integer max binary length is 32, 32 max binary length is 6
@@ -13,7 +13,7 @@ public class HufmanEncoder {
         return compress(data, ignored -> {});
     }
 
-    public static byte[] compress(byte[] data, ProgressCallback callback) {
+    public static byte[] compress(byte[] data, Consumer<Float> callback) {
         if (data.length == 0) { return data; }
         return encodedTree(data, new HuffmanTree(data), callback);
     }
@@ -22,12 +22,12 @@ public class HufmanEncoder {
         return decompress(data, ignored -> {});
     }
 
-    public static byte[] decompress(byte[] data, ProgressCallback callback) {
+    public static byte[] decompress(byte[] data, Consumer<Float> callback) {
         if (data.length == 0) { return data; }
         return decodedTree(data, callback);
     }
 
-    private static byte[] encodedTree(byte[] data, HuffmanTree huffman, ProgressCallback callback) {
+    private static byte[] encodedTree(byte[] data, HuffmanTree huffman, Consumer<Float> callback) {
         BitCarry bitCarry = new BitCarry();
         bitCarry.pushBits(data.length, MAX_POSITIVE_INTEGER_LENGTH);
         encodeHeader(bitCarry, huffman);
@@ -35,13 +35,13 @@ public class HufmanEncoder {
         for (int i = 0; i < data.length; i++) {
             HuffmanTree.Node node = huffman.getLookupTable().get(data[i]);
             bitCarry.pushBits(node.getBinary(), node.getBinaryLength());
-            if (callback != null) { callback.onProgress((float) i/data.length*100); }
+            if (callback != null) { callback.accept((float) i/data.length*100); }
         }
 
         return bitCarry.getBytes(true);
     }
 
-    private static byte[] decodedTree(byte[] data, ProgressCallback callback) {
+    private static byte[] decodedTree(byte[] data, Consumer<Float> callback) {
         BitCarry bitCarry = new BitCarry(data);
         int size = (int) bitCarry.getBits(MAX_POSITIVE_INTEGER_LENGTH);
         ArrayList<Byte> buffer = new ArrayList<>();
@@ -54,7 +54,7 @@ public class HufmanEncoder {
             node = (binary == 0) ? node.getLeftNode() : node.getRightNode();
             if (!node.isLeaf()) { continue; }
             buffer.add(node.getCharacter());
-            if (callback != null) { callback.onProgress((float) buffer.size()/size*100); }
+            if (callback != null) { callback.accept((float) buffer.size()/size*100); }
             node = null;
         }
 

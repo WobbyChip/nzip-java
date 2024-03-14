@@ -1,4 +1,4 @@
-package compression.helper;
+package compression;
 
 import java.util.ArrayList;
 import java.util.List;

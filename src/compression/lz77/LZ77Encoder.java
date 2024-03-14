@@ -1,6 +1,6 @@
 package compression.lz77;
 
-import compression.helper.BitCarry;
+import compression.BitCarry;
 
 import java.util.Iterator;
 

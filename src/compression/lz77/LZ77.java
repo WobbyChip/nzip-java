@@ -1,10 +1,10 @@
 package compression.lz77;
 
-import compression.helper.BitCarry;
-import compression.helper.ProgressCallback;
+import compression.BitCarry;
 
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 public class LZ77 {
     public static int REFERENCE_LENGTH = 3;
@@ -26,7 +26,7 @@ public class LZ77 {
         return compress(data, null);
     }
 
-    public static byte[] compress(byte[] data, ProgressCallback callback) {
+    public static byte[] compress(byte[] data, Consumer<Float> callback) {
         if (data.length == 0) { return data; }
         SuffixArray suffixArray = new SuffixArray(data, LOOK_AHEAD_BUFFER_SIZE, SEARCH_BUFFER_SIZE, MIN_DATA_LENGTH);
         LZ77Encoder bitCarry = new LZ77Encoder(); //Used to easily add data with ref bit
@@ -49,7 +49,7 @@ public class LZ77 {
                 position++;
             }
 
-            if (callback != null) { callback.onProgress((float) position/data.length*100); }
+            if (callback != null) { callback.accept((float) position/data.length*100); }
         }
 
         //Write remaining bytes
@@ -57,7 +57,7 @@ public class LZ77 {
             bitCarry.pushBytes(false, data[i]);
         }
 
-        if (callback != null) { callback.onProgress(100); }
+        if (callback != null) { callback.accept(100f); }
         return bitCarry.getBytes(true);
     }
 
@@ -65,7 +65,7 @@ public class LZ77 {
         return decompress(data, null);
     }
 
-    public static byte[] decompress(byte[] data, ProgressCallback callback) {
+    public static byte[] decompress(byte[] data, Consumer<Float> callback) {
         if (data.length == 0) { return data; }
         AtomicInteger position = new AtomicInteger();
         ArrayList<Byte> output = new ArrayList<>();
@@ -86,10 +86,10 @@ public class LZ77 {
             }
 
             position.addAndGet(length);
-            if (callback != null) { callback.onProgress((float) e.position()/data.length*100); }
+            if (callback != null) { callback.accept((float) e.position()/data.length*100); }
         });
 
-        if (callback != null) { callback.onProgress((float) 100); }
+        if (callback != null) { callback.accept((float) 100); }
         return BitCarry.copyBytes(output);
     }
 }
