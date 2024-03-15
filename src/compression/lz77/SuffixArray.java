@@ -16,13 +16,14 @@ public class SuffixArray {
     private final int lookAheadBufferSize;
     private final int searchBufferSize;
     private final int suffixLength;
-    private int lastPos = -1;
+    private int lastPos;
 
     public SuffixArray(byte[] buffer, int lookAheadBufferSize, int searchBufferSize, int suffixLength) {
         this.buffer = buffer;
         this.lookAheadBufferSize = lookAheadBufferSize;
         this.searchBufferSize = searchBufferSize;
         this.suffixLength = suffixLength;
+        this.lastPos = -suffixLength;
     }
 
     private String getSuffix(int position) {
@@ -53,13 +54,17 @@ public class SuffixArray {
         if (diff == 0) { return; }
         if (diff < 0) { throw new RuntimeException("going back not implemented"); }
 
-        //I REALLY CAN'T TELL IF THIS WORKS PROPERLY OR NO, AND ARE THERE ANY MEMORY LEAKS
         //Clear buffer in the past, this will have hit on performance, but least we will not run out of memory
-        clearSuffixes((lastPos - searchBufferSize), (position - searchBufferSize));
+        //+1 because (position - index >= searchBufferSize), >= is inclusive while "to" is exclusive se we add +1
+
+        //(1 itr) to:    1000 - 100 => 900 + 1   position: 1000  | "to" is exclusive so 900 is cleared
+        //(2 itr) from:  1000 - 100 => 900 + 1   lastPos: 1000   | "from" is inclusive, so we don't need to clear 900 again
+
+        clearSuffixes((lastPos - searchBufferSize) + 1, (position - searchBufferSize) + 1);
 
         //position: 100 + SUFFIX_LENGTH => 103 => 0 to 103 -> [0, 102]
-        //from is included, but to is not included: [from; to) -> [from; to-1]
-        createSuffixes(lastPos, position + suffixLength);
+        //"from" is included, but "to" is not included: [from; to)
+        createSuffixes((lastPos + suffixLength), (position + suffixLength));
 
         //Save current position as last for next time
         this.lastPos = position;
@@ -69,7 +74,7 @@ public class SuffixArray {
         if (to + suffixLength - 1 > buffer.length) { to = buffer.length - suffixLength; }
         if (from < 0) { from = 0; }
 
-        //System.out.println("[clearSuffixes]: { " + from + " " + to + " }");
+        //System.out.println("[createSuffixes]: { " + from + " " + to + " }");
 
         //Initialize lists for all possible combinations to store their index
         for (int i = from; i < to; i++) { getIndexesData(i, true).add(i); }
@@ -80,8 +85,10 @@ public class SuffixArray {
         if (to + suffixLength - 1 > buffer.length) { to = buffer.length - suffixLength; }
         if (from < 0) { from = 0; }
 
+        //System.out.println("[clearSuffixes]: { " + from + " " + to + " }");
+
         for (int i = from; i < to; i++) {
-            ArrayList<Integer> arrayList = getIndexesData(i, true);
+            ArrayList<Integer> arrayList = getIndexesData(i, false);
             if (arrayList != null) { arrayList.remove((Object) i); } else { continue; }
             if (arrayList.isEmpty()) { removeIndexesData(i); }
         }
