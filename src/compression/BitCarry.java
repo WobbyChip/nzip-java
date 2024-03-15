@@ -5,15 +5,14 @@ import java.util.List;
 
 public class BitCarry {
     private static final int MAX_SIZE = 64;
-
     private final ArrayList<Byte> buffer = new ArrayList<>(); //With list, it will be faster to add data, but worse for memory usage
-    protected byte[] data = new byte[0]; //Data used when decoding
+    private byte[] data = new byte[0]; //Data used when decoding
     private byte carry = 0; //Carrying byte, for example, 0b1101000
     private long carry_long = 0; //Carrying long, for example, 0b1101000(56)
     private int carry_k = 0; //How many bits we are carrying right now
     private byte de_carry = 0; //Carrying byte for decoding
     private int de_carry_k = 0; //How many bits we are carrying right now
-    protected int pos = -1; //Position used in decoding data
+    private int pos = -1; //Position used in decoding data
 
     public BitCarry() {}
     public BitCarry(byte[] data) { this.data = data; }
