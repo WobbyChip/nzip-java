@@ -1,6 +1,6 @@
 import compression.deflate.Deflate;
 import compression.BitCarry;
-import compression.huffman.HufmanEncoder;
+import compression.huffman.HuffmanEncoder;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -55,8 +55,8 @@ public class Test {
 
     public static void testHuffman() throws IOException {
         byte[] rawData = Files.readAllBytes(Paths.get("files\\test.txt"));
-        byte[] comp = HufmanEncoder.compress(rawData); //, progress -> System.out.print((progress == 100 ? "\n" : "\r") + "C: " + progress));
-        byte[] decomp = HufmanEncoder.decompress(comp); //, progress -> System.out.print((progress == 100 ? "\n" : "\r") + "D: " + progress));
+        byte[] comp = HuffmanEncoder.compress(rawData); //, progress -> System.out.print((progress == 100 ? "\n" : "\r") + "C: " + progress));
+        byte[] decomp = HuffmanEncoder.decompress(comp); //, progress -> System.out.print((progress == 100 ? "\n" : "\r") + "D: " + progress));
 
         System.out.println("\n" + comp.length + " " + rawData.length + " " + decomp.length + " | Verify: " + Arrays.equals(rawData, decomp));
         //Files.write(Paths.get("files\\test.txt.huff"), decomp);
