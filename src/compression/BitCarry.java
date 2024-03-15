@@ -21,8 +21,7 @@ public class BitCarry {
     public BitCarry(byte[] data) { this.data = data; }
 
     public void pushBits(long data, int size) {
-        if (size < 0) { throw new RuntimeException("size cannot be negative"); }
-        if (size > 64) { throw new RuntimeException("max size is 64 bits"); }
+        if ((size < 1) || (size > 64)) { throw new RuntimeException("size must be in range [1; 64]"); }
         data = data << (64 - size); //Convert data to comfortable format : (56)00000101 => 10100000(56)
 
         while (size > 0) {
@@ -48,8 +47,7 @@ public class BitCarry {
     }
 
     private long getBits(int size, boolean reset) {
-        if (size < 0) { throw new RuntimeException("size cannot be negative"); }
-        if (size > 64) { throw new RuntimeException("max size is 64 bits"); }
+        if ((size < 1) || (size > 64)) { throw new RuntimeException("size must be in range [1; 64]"); }
         if (reset) { carry_long = carry_k = 0; }
 
         if (de_carry_k == 0) {
