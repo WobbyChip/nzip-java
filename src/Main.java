@@ -1,79 +1,106 @@
 import compression.deflate.Deflate;
-import compression.BitCarry;
-import compression.huffman.HufmanEncoder;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
-
+import java.util.Locale;
+import java.util.Scanner;
 
 public class Main {
-    public static void main(String[] args) throws IOException {
-        testCompress();
-        //testHuffman();
-        //testCarry();
-        //System.out.println(BitCarry.formatLong(Integer.MAX_VALUE));
-        //System.out.println(BitCarry.formatLong(1));
-    }
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        String sourceFile, resultFile, firstFile, secondFile;
+        System.out.println("Enter command (comp, decomp, size, equal, about, exit): ");
 
-    public static void testCarry() {
-        BitCarry bitCarry = new BitCarry();
-        //bitCarry.pushBytes(false, (byte) 0b10000011, (byte) 0b10000011);
-        //bitCarry.pushBytes(false, (byte) 0xFF, (byte) 0xFF, (byte) 0b01000011);
-        for (int i = 0; i < 1; i++) {
-            bitCarry.pushBytes((byte) 0b10000001, (byte) 0b11101111, (byte) 0b01000011);
-            bitCarry.pushBytes((byte) 0b00001111);
-            bitCarry.pushBytes((byte) 0b00001111);
-            bitCarry.pushBytes((byte) 0b00001111, (byte) 0b11111111, (byte) 0b01000011);
-            bitCarry.pushBytes((byte) 0b00001111, (byte) 0b11111111, (byte) 0b01000011);
+        while (true) {
+            switch (sc.next()) {
+                case "comp":
+                    System.out.print("source file name: ");
+                    sourceFile = sc.next();
+                    System.out.print("archive name: ");
+                    resultFile = sc.next();
+                    comp(sourceFile, resultFile);
+                    break;
+                case "decomp":
+                    System.out.print("archive name: ");
+                    sourceFile = sc.next();
+                    System.out.print("file name: ");
+                    resultFile = sc.next();
+                    decomp(sourceFile, resultFile);
+                    break;
+                case "size":
+                    System.out.print("file name: ");
+                    sourceFile = sc.next();
+                    size(sourceFile);
+                    break;
+                case "equal":
+                    System.out.print("first file name: ");
+                    firstFile = sc.next();
+                    System.out.print("second file name: ");
+                    secondFile = sc.next();
+                    System.out.println(equal(firstFile, secondFile));
+                    break;
+                case "about": about(); break;
+                case "exit": System.exit(0); break;
+            }
         }
+    }
 
-        System.out.println();
-        byte[] buffer = bitCarry.getBytes(true);
-
-        for (byte b : buffer) {
-            System.out.println(BitCarry.formatByte(b));
+    public static void comp(String sourceFile, String resultFile) {
+        try {
+            String filename = Paths.get(sourceFile).getFileName().toString();
+            byte[] data = Files.readAllBytes(Paths.get(sourceFile));
+            data = Deflate.compress(data, progress -> System.out.printf(Locale.US, "\rCompressing %s: %.2f%%%s", filename, progress, (progress == 100 ? "\n" : "")));
+            Files.write(Paths.get(resultFile), data);
+        } catch (IOException ex) {
+            System.out.println(ex.getMessage());
         }
-
-        System.out.println();
-
-        System.out.println(BitCarry.formatLong(new BitCarry(buffer).getBits(32)));
-
-        //BitCarry bitCarry1 = new BitCarry(buffer);
-        //System.out.println("T: " + BitCarry.formatByte(bitCarry1.getBits(8)));
-        //System.out.println("T: " + BitCarry.formatByte(bitCarry1.getBits(8)));
     }
 
-    public static void compress(String filename) throws IOException {
-        byte[] rawData = Files.readAllBytes(Paths.get("files\\" + filename));
-
-        byte[] comp = Deflate.compress(rawData, progress -> System.out.print("\rC: " + progress));
-        byte[] decomp = Deflate.decompress(comp, progress -> System.out.print("\rD: " + progress));
-        System.out.println("   nzip (" + filename + ") -> C: " + comp.length + " | D: " + decomp.length + " | R: " + rawData.length + " | Verify: " + Arrays.equals(rawData, decomp));
+    public static void decomp(String sourceFile, String resultFile) {
+        try {
+            String filename = Paths.get(sourceFile).getFileName().toString();
+            byte[] data = Files.readAllBytes(Paths.get(sourceFile));
+            data = Deflate.decompress(data, progress -> System.out.printf(Locale.US, "\rDecompressing %s: %.2f%%%s", filename, progress, (progress == 100 ? "\n" : "")));
+            Files.write(Paths.get(resultFile), data);
+        } catch (IOException ex) {
+            System.out.println(ex.getMessage());
+        }
     }
 
-    public static void testHuffman() throws IOException {
-        byte[] rawData = Files.readAllBytes(Paths.get("files\\test.txt"));
-        byte[] comp = HufmanEncoder.compress(rawData); //, progress -> System.out.print((progress == 100 ? "\n" : "\r") + "C: " + progress));
-        byte[] decomp = HufmanEncoder.decompress(comp); //, progress -> System.out.print((progress == 100 ? "\n" : "\r") + "D: " + progress));
-
-        System.out.println("\n" + comp.length + " " + rawData.length + " " + decomp.length + " | Verify: " + Arrays.equals(rawData, decomp));
-        //Files.write(Paths.get("files\\test.txt.huff"), decomp);
-        //System.out.println(new HuffmanEncoding().encode(rawData).length);
+    public static void size(String filename) {
+        System.out.println("size: " + new File(filename).length());
     }
 
-    public static void testCompress() throws IOException {
-        compress("shrek.txt"); //(shrek.txt) -> C: 36991 | D: 70658 | R: 70658 | Verify: true
-        compress("test_256.bin"); //(test_256.bin) -> C: 448 | D: 256 | R: 256 | Verify: true
-        compress("small.txt"); //(small.txt) -> C: 103 | D: 80 | R: 80 | Verify: true
-        compress("1byte.txt"); //(1byte.txt) -> C: 9 | D: 1 | R: 1 | Verify: true
-        compress("small_test.txt"); //(small_test.txt) -> C: 71 | D: 64 | R: 64 | Verify: true
-        compress("screenshot.png"); //(screenshot.png) -> C: 717765 | D: 645096 | R: 645096 | Verify: true
-        compress("test.txt"); //(test.txt) -> C: 38569 | D: 184207 | R: 184207 | Verify: true
-        compress("1234.txt"); //(1234.txt) -> C: 1164 | D: 200448 | R: 200448 | Verify: true
-        compress("blank.bin"); //(blank.bin) -> C: 590 | D: 102400 | R: 102400 | Verify: true
-        compress("monkey.bmp"); //(monkey.bmp) -> C: 2841502 | D: 3686550 | R: 3686550 | Verify: true
-        compress("empty.txt"); //(empty.txt) -> C: 0 | D: 0 | R: 0 | Verify: true
+    public static boolean equal(String firstFile, String secondFile) {
+        long f_size1 = new File(firstFile).length();
+        long f_size2 = new File(secondFile).length();
+        if (f_size1 != f_size2) { return false; }
+
+        try {
+            FileInputStream f1 = new FileInputStream(firstFile);
+            FileInputStream f2 = new FileInputStream(secondFile);
+
+            byte[] buffer1 = new byte[1024];
+            byte[] buffer2 = new byte[1024];
+
+            while ((f1.read(buffer1) != -1) && (f2.read(buffer2) != -1)) {
+                if (!Arrays.equals(buffer1, buffer2)) { f1.close(); f2.close(); return false; }
+            }
+
+            f1.close();
+            f2.close();
+            return true;
+        } catch (IOException ex) {
+            System.out.println(ex.getMessage());
+            return false;
+        }
+    }
+
+    public static void about() {
+        System.out.println("000RDB000 Jānis Programmētājs");
     }
 }

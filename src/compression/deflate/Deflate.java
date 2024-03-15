@@ -13,7 +13,9 @@ public class Deflate {
 
     public static byte[] compress(byte[] data, Consumer<Float> callback) {
         data = LZ77Encoder.compress(data, progress -> callback.accept(progress/2f));
-        return HufmanEncoder.compress(data, progress -> callback.accept(50f + progress/2f));
+        data = HufmanEncoder.compress(data, progress -> callback.accept(49.9f + progress/2f));
+        callback.accept(100f);
+        return data;
     }
 
     public static byte[] decompress(byte[] data) {
@@ -22,6 +24,8 @@ public class Deflate {
 
     public static byte[] decompress(byte[] data, Consumer<Float> callback) {
         data = HufmanEncoder.decompress(data, progress -> callback.accept(progress/2f));
-        return LZ77Encoder.decompress(data, progress -> callback.accept(50f + progress/2f));
+        data = LZ77Encoder.decompress(data, progress -> callback.accept(49.9f + progress/2f));
+        callback.accept(100f);
+        return data;
     }
 }
