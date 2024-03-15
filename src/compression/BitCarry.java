@@ -4,12 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BitCarry {
-    //This is used to determine if data is normal byte or encoded data by adding 1 bit in front of data. (1 bit + 8 bits)
-    //If the bit is 0 then data is a normal byte, otherwise it is encoded data
-    //We also can save space by not adding 1 bit to each byte of encoded data, but only to first, but this requires to know size of encoded data
+    private static final int MAX_SIZE = 64;
 
-    private final ArrayList<Byte> buffer = new ArrayList<>(); //With list it will be faster to add data, but worse for memory usage
-    protected byte[] data = new byte[0];
+    private final ArrayList<Byte> buffer = new ArrayList<>(); //With list, it will be faster to add data, but worse for memory usage
+    protected byte[] data = new byte[0]; //Data used when decoding
     private byte carry = 0; //Carrying byte, for example, 0b1101000
     private long carry_long = 0; //Carrying long, for example, 0b1101000(56)
     private int carry_k = 0; //How many bits we are carrying right now
@@ -21,8 +19,8 @@ public class BitCarry {
     public BitCarry(byte[] data) { this.data = data; }
 
     public void pushBits(long data, int size) {
-        if ((size < 1) || (size > 64)) { throw new RuntimeException("size must be in range [1; 64]"); }
-        data = data << (64 - size); //Convert data to comfortable format : (56)00000101 => 10100000(56)
+        if ((size < 1) || (size > MAX_SIZE)) { throw new RuntimeException(String.format("size must be in range [1; %d]", MAX_SIZE)); }
+        data = data << (MAX_SIZE - size); //Convert data to comfortable format : (56)00000101 => 10100000(56)
 
         while (size > 0) {
             if (carry_k == 8) { buffer.add(carry); carry_k = carry = 0; } //If carry is full, empty it
@@ -30,7 +28,7 @@ public class BitCarry {
 
             //Add data to carry depending on free space of carry
             //0b11111111 >> 1 => 0b11111111 (STUPID JAVA) => use (data & 0xff)
-            carry |= (byte) (data >>> (carry_k + 56)); //64 long - 8 byte => 56 bits + carry_k
+            carry |= (byte) (data >>> (carry_k + (MAX_SIZE - 8))); //64 long - 8 byte => 56 bits + carry_k
 
             carry_k += move_carry_k; //Increase size of carry
             size -= move_carry_k; //Decrease size of data
@@ -47,7 +45,7 @@ public class BitCarry {
     }
 
     private long getBits(int size, boolean reset) {
-        if ((size < 1) || (size > 64)) { throw new RuntimeException("size must be in range [1; 64]"); }
+        if ((size < 1) || (size > MAX_SIZE)) { throw new RuntimeException(String.format("size must be in range [1; %d]", MAX_SIZE)); }
         if (reset) { carry_long = carry_k = 0; }
 
         if (de_carry_k == 0) {
@@ -59,7 +57,7 @@ public class BitCarry {
         int move_carry_k = Math.min((size - carry_k), de_carry_k); //How many we can move
         //System.out.println("{ move_carry_k: " + move_carry_k + " carry: " + formatByte(carry) + " de_carry: " + formatByte(de_carry) + " carry_k: " + carry_k + " }");
 
-        long de_carry_long = (long) (de_carry & 0xff) << (56 - carry_k); //Convert data to comfort format: 11000000 -> 11000000(56)
+        long de_carry_long = (long) (de_carry & 0xff) << ((MAX_SIZE - 8) - carry_k); //Convert data to comfort format: 11000000 -> 11000000(56)
         carry_long |= (de_carry_long); //Move bits from de_carry to carry
         de_carry = (byte) ((de_carry & 0xff) << move_carry_k); //Update left bits in de_carry, move them to right
 
@@ -68,7 +66,7 @@ public class BitCarry {
 
         //Maybe there was not enough bits in de_carry
         if ((carry_k != size)) { return getBits(size, false); }
-        return (carry_long >>> (64 - size)); //So this is for what >>> is used
+        return (carry_long >>> (MAX_SIZE - size)); //So this is for what >>> is used
     }
 
     public long getBits(int size) {
