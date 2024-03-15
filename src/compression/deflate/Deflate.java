@@ -2,7 +2,7 @@ package compression.deflate;
 
 
 import compression.huffman.HufmanEncoder;
-import compression.lz77.LZ77;
+import compression.lz77.LZ77Encoder;
 
 import java.util.function.Consumer;
 
@@ -12,7 +12,7 @@ public class Deflate {
     }
 
     public static byte[] compress(byte[] data, Consumer<Float> callback) {
-        data = LZ77.compress(data, progress -> callback.accept(progress/2f));
+        data = LZ77Encoder.compress(data, progress -> callback.accept(progress/2f));
         return HufmanEncoder.compress(data, progress -> callback.accept(50f + progress/2f));
     }
 
@@ -22,6 +22,6 @@ public class Deflate {
 
     public static byte[] decompress(byte[] data, Consumer<Float> callback) {
         data = HufmanEncoder.decompress(data, progress -> callback.accept(progress/2f));
-        return LZ77.decompress(data, progress -> callback.accept(50f + progress/2f));
+        return LZ77Encoder.decompress(data, progress -> callback.accept(50f + progress/2f));
     }
 }

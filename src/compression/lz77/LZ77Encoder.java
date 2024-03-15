@@ -2,41 +2,101 @@ package compression.lz77;
 
 import compression.BitCarry;
 
-import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
-public class LZ77Encoder extends BitCarry {
-    public LZ77Encoder() { super(); }
-    public LZ77Encoder(byte[] data) { super(data); }
-    public record RefData(boolean bRefBit, int position, byte[] data) {}
+public class LZ77Encoder {
+    private static final int REFERENCE_LENGTH_SIZE = 8; //Size in bits to encode length
+    private static final int REFERENCE_DISTANCE_SIZE = 16; //Size in bits to encode distance
 
-    public void pushBytes(boolean bRefBit, int... data) {
-        if (bRefBit) { pushBits(1, 1); }
+    //This is because encoded reference uses 3 bytes + 1 bit while raw data uses 3 bytes and 3 bits
+    //Yes, we can set it to 3, because 25 < 27, but then we sacrifice length, so in average file it will get worse
+    private static final int MIN_DATA_LENGTH = 4;
 
-        for (int value : data) {
-            if (!bRefBit) { pushBits(0, 1); }
-            pushByte((byte) value);
+    //255 + 4 => which is 1 byte used in encoding, remember [0, 1, 2, 3] are never used in length
+    //So in the end we will have range [4; 259] - 4 => [0, 255]
+    private static final int LOOK_AHEAD_BUFFER_SIZE = (1 << REFERENCE_LENGTH_SIZE) - 1 + MIN_DATA_LENGTH; //256 - 1 + 4 = 259
+
+    //Because of cycling data new possible range is [1, 65536] in case of 111111111 -> 1<8, 1> so we add +1
+    private static final int MIN_DATA_DISTANCE = 1;
+
+    private static final int SEARCH_BUFFER_SIZE = (1 << REFERENCE_DISTANCE_SIZE) + MIN_DATA_DISTANCE; //[0; 65535] which is 2 bytes used in encoding
+
+    public static byte[] compress(byte[] data) {
+        return compress(data, null);
+    }
+
+    public static byte[] compress(byte[] data, Consumer<Float> callback) {
+        if (data.length == 0) { return data; }
+        SuffixArray suffixArray = new SuffixArray(data, LOOK_AHEAD_BUFFER_SIZE, SEARCH_BUFFER_SIZE, MIN_DATA_LENGTH);
+        BitCarry bitCarry = new BitCarry(); //Used to easily add data with ref bit
+        int position = 0;
+
+        while (position < data.length - MIN_DATA_LENGTH) {
+            int[] reference = suffixArray.nextLongestMatch(position);
+            int length = reference[0]; //Length of repeating data
+            bitCarry.pushBits((length >= MIN_DATA_LENGTH ? 1 : 0), 1); //This determines if next data is raw data or encoded reference
+
+            if (length >= MIN_DATA_LENGTH) {
+                //If length more than 3 then encode distance and length and push them to bit carry
+                //-1 because (1 << 8): 256, 256 is out of range for byte [0; 255], and -MIN_DATA_LENGTH, because if (length > MIN_DATA_LENGTH)
+                int distance = position - reference[1] - MIN_DATA_DISTANCE; //Offset, aka, how much to go back
+                //System.out.println("{ " + length + " " + (position - reference[1]) + " " + distance + " }");
+                bitCarry.pushBits((length - MIN_DATA_LENGTH), REFERENCE_LENGTH_SIZE);
+                bitCarry.pushBits(distance, REFERENCE_DISTANCE_SIZE);
+                position += length;
+            } else {
+                //If length less than tree, then push byte as normal
+                bitCarry.pushByte(data[position]);
+                position++;
+            }
+
+            if (callback != null) { callback.accept((float) position/data.length*100); }
         }
+
+        //Write remaining bytes as raw data
+        for (int i = position; i < data.length; i++) {
+            bitCarry.pushBits(0, 1);
+            bitCarry.pushByte(data[i]);
+        }
+
+        if (callback != null) { callback.accept(100f); }
+        return bitCarry.getBytes(true);
     }
 
-    private RefData getRefData(int dataSize) {
-        boolean bRefBit = getBits(1) == 1;
-        return new RefData(bRefBit, pos, getBytes(bRefBit ? dataSize : 1));
+    public static byte[] decompress(byte[] data) {
+        return decompress(data, null);
     }
 
-    public Iterator<RefData> decodeBytes(int dataSize) {
-        this.clear();
-        pos = -1;
+    public static byte[] decompress(byte[] data, Consumer<Float> callback) {
+        if (data.length == 0) { return data; }
+        BitCarry bitCarry = new BitCarry(data);
+        ArrayList<Byte> output = new ArrayList<>();
+        AtomicInteger position = new AtomicInteger();
 
-        return new Iterator<>() {
-            @Override
-            public boolean hasNext() {
-                return pos+1 < data.length;
+        while (bitCarry.availableBytes() > 0) {
+            //If first bit is 0 then next byte is raw data
+            if (bitCarry.getBits(1) == 0) {
+                output.add(bitCarry.getByte());
+                position.addAndGet(1);
+                continue;
             }
 
-            @Override
-            public RefData next() {
-                return getRefData(dataSize);
+            int length = (int) bitCarry.getBits(REFERENCE_LENGTH_SIZE) + MIN_DATA_LENGTH; //Length is encoded as 1 byte and 1 byte is 8 bits
+            int distance = (int) bitCarry.getBits(REFERENCE_DISTANCE_SIZE) + MIN_DATA_DISTANCE; //Distance is encoded as 2 byte and 1 byte is 16 bits
+
+            //Copy bytes in loop from past
+            for (int i = 0; i < length; i++) {
+                output.add(output.get((position.get() - distance + i)));
             }
-        };
+
+            position.addAndGet(length); //Increase position by reference length
+            int done = data.length - bitCarry.availableBytes(); //Calculate how many bytes we processed
+            if (callback != null) { callback.accept((float) done/data.length*100); }
+        }
+
+        if (callback != null) { callback.accept((float) 100); }
+        return BitCarry.copyBytes(output);
     }
 }

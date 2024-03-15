@@ -43,6 +43,10 @@ public class BitCarry {
         pushBits((data & 0xff), 8);
     }
 
+    public void pushBytes(byte ...data) {
+        for (byte b : data) { pushByte(b); }
+    }
+
     private long getBits(int size, boolean reset) {
         if (size < 0) { throw new RuntimeException("size cannot be negative"); }
         if (size > 64) { throw new RuntimeException("max size is 64 bits"); }
@@ -102,6 +106,10 @@ public class BitCarry {
 
     public int availableBits() {
         return (data.length - (pos+1))*8 + de_carry_k;
+    }
+
+    public int availableBytes() {
+        return (data.length - (pos+1));
     }
 
     public static String formatLong(long value) {
