@@ -1,5 +1,6 @@
 import compression.deflate.Deflate;
 import compression.BitCarry;
+import compression.huffman.HufmanEncoder;
 import compression.lz77.LZ77;
 import compression.lz77.LZ77Encoder;
 
@@ -63,9 +64,9 @@ public class Main {
     }
 
     public static void testHuffman() throws IOException {
-        byte[] rawData = Files.readAllBytes(Paths.get("files\\small.txt"));
-        byte[] comp = LZ77.compress(rawData, progress -> System.out.print((progress == 100 ? "\n" : "\r") + "C: " + progress));
-        byte[] decomp = LZ77.decompress(comp, progress -> System.out.print((progress == 100 ? "\n" : "\r") + "D: " + progress));
+        byte[] rawData = Files.readAllBytes(Paths.get("files\\test.txt"));
+        byte[] comp = HufmanEncoder.compress(rawData); //, progress -> System.out.print((progress == 100 ? "\n" : "\r") + "C: " + progress));
+        byte[] decomp = HufmanEncoder.decompress(comp); //, progress -> System.out.print((progress == 100 ? "\n" : "\r") + "D: " + progress));
 
         System.out.println("\n" + comp.length + " " + rawData.length + " " + decomp.length + " | Verify: " + Arrays.equals(rawData, decomp));
         //Files.write(Paths.get("files\\test.txt.huff"), decomp);
@@ -74,6 +75,7 @@ public class Main {
 
     public static void testCompress() throws IOException {
         compress("shrek.txt"); //(shrek.txt) -> C: 38170 | D: 70658 | R: 70658 | Verify: true
+        compress("test_256.bin"); //(test_256.bin) -> C: 448 | D: 256 | R: 256 | Verify: true
         compress("small.txt"); //(small.txt) -> C: 60 | D: 80 | R: 80 | Verify: true
         compress("small_test.txt"); //(small_test.txt) -> C: 39 | D: 64 | R: 64 | Verify: true
         compress("screenshot.png"); //(screenshot.png) -> C: 723081 | D: 645096 | R: 645096 | Verify: true

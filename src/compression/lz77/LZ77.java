@@ -7,20 +7,20 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 public class LZ77 {
-    public static int REFERENCE_LENGTH = 3;
+    private static final int REFERENCE_LENGTH = 3;
 
     //This is because encoded reference uses 3 bytes + 1 bit while raw data uses 3 bytes and 3 bits
     //Yes, we can set it to 3, because 25 < 27, but then we sacrifice length, so in average file it will get worse
-    public static int MIN_DATA_LENGTH = 4;
+    private static final int MIN_DATA_LENGTH = 4;
 
     //255 + 4 => which is 1 byte used in encoding, remember [0, 1, 2, 3] are never used in length
     //So in the end we will have range [4; 259] - 4 => [0, 255]
-    public static int LOOK_AHEAD_BUFFER_SIZE = (1 << 8) - 1 + MIN_DATA_LENGTH; //256 - 1 + 4 = 259
+    private static final int LOOK_AHEAD_BUFFER_SIZE = (1 << 8) - 1 + MIN_DATA_LENGTH; //256 - 1 + 4 = 259
 
     //Because of cycling data new possible range is [1, 65536] in case of 111111111 -> 1<8, 1> so we add +1
-    public static int MIN_DATA_DISTANCE = 1;
+    private static final int MIN_DATA_DISTANCE = 1;
 
-    public static int SEARCH_BUFFER_SIZE = (1 << 16) + MIN_DATA_DISTANCE; //[0; 65535] which is 2 bytes used in encoding
+    private static final int SEARCH_BUFFER_SIZE = (1 << 16) + MIN_DATA_DISTANCE; //[0; 65535] which is 2 bytes used in encoding
 
     public static byte[] compress(byte[] data) {
         return compress(data, null);

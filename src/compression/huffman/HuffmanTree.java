@@ -33,6 +33,9 @@ public class HuffmanTree {
         return root;
     }
 
+    //Count frequencies of each byte, this will be used in tree building
+    //Bytes with most frequencies, go up in tree, so that they have the smallest path
+    //Each path is encoded as binary with 0 (left) and 1 (right)
     private void createFrequencyMap(byte[] data) {
         frequencies.clear();
 
@@ -41,27 +44,36 @@ public class HuffmanTree {
         }
     }
 
+    //Here we build the tree using frequencies
+    //https://upload.wikimedia.org/wikipedia/commons/d/d8/HuffmanCodeAlg.png
     private void buildHuffmanTree(HashMap<Byte, Integer> frequencies) {
         PriorityQueue<Node> queue = new PriorityQueue<>();
 
+        //Add all frequencies to queue
         for (Map.Entry<Byte, Integer> entry : frequencies.entrySet()) {
             queue.add(new Node(entry.getKey(), entry.getValue()));
         }
 
+        //This is in case if data is 1 byte, we need at least 2 to create tree,
+        //Then we just create empty node, it technically will never be used
         if (queue.size() == 1) {
             queue.add(new Node((byte) 0, 1));
         }
 
+        //Now we need to combine all nodes together and build a tree, until we have left with 1 node which is root
         while (queue.size() > 1) {
-            Node left = queue.poll();;
-            Node right = queue.poll();
+            Node left = queue.poll();
+            Node right = queue.poll(); //Merge 2 smallest by frequency nodes and create a new node
             Node parent = new Node((byte) 0, (left.getFrequency() + right.getFrequency()), left, right);
             queue.add(parent);
         }
 
+        //Return final root of the tree
         this.root = queue.poll();
     }
 
+    //Then after creating a tree we can create lookup table where we associate byte
+    //with its new binary path, this is used to then encode those bytes
     private void buildLookupTable(Node node, String binary) {
         if (node.isLeaf()) {
             lookupTable.put(node.character, node.setBinary(binary));
@@ -126,6 +138,7 @@ public class HuffmanTree {
 
         @Override
         public int compareTo(Node node) {
+            //This is the reason why queue returns smallest node
             int result = Integer.compare(frequency, node.getFrequency());
             return (result != 0) ? result : Integer.compare(character, node.getCharacter());
         }
