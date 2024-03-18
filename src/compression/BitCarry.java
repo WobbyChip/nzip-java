@@ -43,7 +43,7 @@ public class BitCarry {
         for (byte b : data) { pushByte(b); }
     }
 
-    private long getBits(int size, boolean reset) {
+    public long getBits(int size, boolean reset, boolean shift) {
         if ((size < 1) || (size > MAX_SIZE)) { throw new RuntimeException(String.format("size must be in range [1; %d]", MAX_SIZE)); }
         if (reset) { carry_long = carry_k = 0; }
 
@@ -58,18 +58,18 @@ public class BitCarry {
 
         long de_carry_long = (long) (de_carry & 0xff) << ((MAX_SIZE - 8) - carry_k); //Convert data to comfort format: 11000000 -> 11000000(56)
         carry_long |= (de_carry_long); //Move bits from de_carry to carry
-        de_carry = (byte) ((de_carry & 0xff) << move_carry_k); //Update left bits in de_carry, move them to right
+        if (shift) { de_carry = (byte) ((de_carry & 0xff) << move_carry_k); } //Update left bits in de_carry, move them to right
 
         carry_k += move_carry_k; //Update how many we are carrying in carry
-        de_carry_k -= move_carry_k; //Update how many we are carrying in de_carry
+        if (shift) { de_carry_k -= move_carry_k; } //Update how many we are carrying in de_carry
 
         //Maybe there was not enough bits in de_carry
-        if ((carry_k != size)) { return getBits(size, false); }
+        if ((carry_k != size)) { return getBits(size, false, shift); }
         return (carry_long >>> (MAX_SIZE - size)); //So this is for what >>> is used
     }
 
     public long getBits(int size) {
-        return getBits(size, true);
+        return getBits(size, true, true);
     }
 
     public byte getByte() {
