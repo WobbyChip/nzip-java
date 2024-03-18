@@ -84,20 +84,20 @@ public class Test {
         compress("empty.txt");
 
         /*
-        (File1.html) -> C: 26506 | D: 80479 | R: 80479 | Ratio: 3.0362558 | Verify: true
-        (File2.html) -> C: 82351 | D: 344523 | R: 344523 | Ratio: 4.1835923 | Verify: true
-        (File3.html) -> C: 24163 | D: 83069 | R: 83069 | Ratio: 3.4378595 | Verify: true
-        (File4.html) -> C: 45061 | D: 206694 | R: 206694 | Ratio: 4.5869823 | Verify: true
-        (test.txt) -> C: 38569 | D: 184207 | R: 184207 | Ratio: 4.7760377 | Verify: true
-        (shrek.txt) -> C: 36991 | D: 70658 | R: 70658 | Ratio: 1.9101403 | Verify: true
-        (test_256.bin) -> C: 448 | D: 256 | R: 256 | Ratio: 0.5714286 | Verify: true
-        (small.txt) -> C: 103 | D: 80 | R: 80 | Ratio: 0.776699 | Verify: true
-        (1byte.txt) -> C: 9 | D: 1 | R: 1 | Ratio: 0.11111111 | Verify: true
-        (small_test.txt) -> C: 71 | D: 64 | R: 64 | Ratio: 0.90140843 | Verify: true
-        (screenshot.png) -> C: 717765 | D: 645096 | R: 645096 | Ratio: 0.89875656 | Verify: true
-        (1234.txt) -> C: 1164 | D: 200448 | R: 200448 | Ratio: 172.20619 | Verify: true
-        (blank.bin) -> C: 590 | D: 102400 | R: 102400 | Ratio: 173.55933 | Verify: true
-        (monkey.bmp) -> C: 2841502 | D: 3686550 | R: 3686550 | Ratio: 1.2973949 | Verify: true
+        (File1.html) -> C: 26198 | D: 80479 | R: 80479 | Ratio: 3.071952 | Verify: true
+        (File2.html) -> C: 81966 | D: 344523 | R: 344523 | Ratio: 4.203243 | Verify: true
+        (File3.html) -> C: 23910 | D: 83069 | R: 83069 | Ratio: 3.4742367 | Verify: true
+        (File4.html) -> C: 44754 | D: 206694 | R: 206694 | Ratio: 4.6184473 | Verify: true
+        (test.txt) -> C: 38218 | D: 184207 | R: 184207 | Ratio: 4.8199015 | Verify: true
+        (shrek.txt) -> C: 36606 | D: 70658 | R: 70658 | Ratio: 1.93023 | Verify: true
+        (test_256.bin) -> C: 490 | D: 256 | R: 256 | Ratio: 0.52244896 | Verify: true
+        (small.txt) -> C: 94 | D: 80 | R: 80 | Ratio: 0.85106385 | Verify: true
+        (1byte.txt) -> C: 7 | D: 1 | R: 1 | Ratio: 0.14285715 | Verify: true
+        (small_test.txt) -> C: 57 | D: 64 | R: 64 | Ratio: 1.122807 | Verify: true
+        (screenshot.png) -> C: 682865 | D: 645096 | R: 645096 | Ratio: 0.9446904 | Verify: true
+        (1234.txt) -> C: 1065 | D: 200448 | R: 200448 | Ratio: 188.21408 | Verify: true
+        (blank.bin) -> C: 498 | D: 102400 | R: 102400 | Ratio: 205.6225 | Verify: true
+        (monkey.bmp) -> C: 2754556 | D: 3686550 | R: 3686550 | Ratio: 1.3383464 | Verify: true
         (empty.txt) -> C: 0 | D: 0 | R: 0 | Ratio: NaN | Verify: true
          */
     }
