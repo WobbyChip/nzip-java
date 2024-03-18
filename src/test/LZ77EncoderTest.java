@@ -1,12 +1,12 @@
-package compression.lz77;
+package test;
 
 import compression.BitCarry;
+import compression.lz77.SuffixArray;
 
 import java.util.ArrayList;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
-public class LZ77Encoder {
+public class LZ77EncoderTest {
     private static final int REFERENCE_LENGTH_SIZE = 8; //Size in bits to encode length
     private static final int REFERENCE_DISTANCE_SIZE = 16; //Size in bits to encode distance
 
@@ -36,19 +36,21 @@ public class LZ77Encoder {
         while (position < data.length - MIN_DATA_LENGTH) {
             int[] reference = suffixArray.nextLongestMatch(position);
             int length = reference[0]; //Length of repeating data
-            bitCarry.pushBits((length >= MIN_DATA_LENGTH ? 1 : 0), 1); //This determines if next data is raw data or encoded reference
 
             if (length >= MIN_DATA_LENGTH) {
                 //If length more than 3 then encode distance and length and push them to bit carry
                 //-1 because (1 << 8): 256, 256 is out of range for byte [0; 255], and -MIN_DATA_LENGTH, because if (length > MIN_DATA_LENGTH)
                 int distance = position - reference[1] - MIN_DATA_DISTANCE; //Offset, aka, how much to go back
                 //System.out.println("{ " + length + " " + (position - reference[1]) + " " + distance + " }");
+                bitCarry.pushBits(0b10, 2); //This determines if next data encoded reference
                 bitCarry.pushBits((length - MIN_DATA_LENGTH), REFERENCE_LENGTH_SIZE);
                 bitCarry.pushBits(distance, REFERENCE_DISTANCE_SIZE);
                 position += length;
             } else {
                 //If length less than tree, then push byte as normal
-                bitCarry.pushByte(data[position]);
+                boolean b1 = isLeadingOne(data[position], 8);
+                if (b1) { bitCarry.pushBits(1, 1); }  //This determines if next data is raw data that starts with 1 bit
+                bitCarry.pushBits(data[position], 8);
                 position++;
             }
 
@@ -57,8 +59,9 @@ public class LZ77Encoder {
 
         //Write remaining bytes as raw data
         for (int i = position; i < data.length; i++) {
-            bitCarry.pushBits(0, 1);
-            bitCarry.pushByte(data[i]);
+            boolean b1 = isLeadingOne(data[i], 8);
+            if (b1) { bitCarry.pushBits(1, 1); }
+            bitCarry.pushBits(data[i], 8);
         }
 
         if (callback != null) { callback.accept(100f); }
@@ -76,13 +79,26 @@ public class LZ77Encoder {
         int position = 0;
 
         while (bitCarry.availableBytes() > 0) {
-            //If first bit is 0 then next byte is raw data
-            if (bitCarry.getBits(1) == 0) {
-                output.add(bitCarry.getByte());
-                position++;
+            //D: 01110101 -> 01110101
+            if (bitCarry.getBits(1, true, false) == 0) {
+                output.add((byte) bitCarry.getBits(8, true, true));
+                position += 1;
                 continue;
             }
 
+            bitCarry.getBits(1, true, true); //It is definitely 1, we don't need it
+
+            //D: 11110101 -> 1 11110101
+            if ((bitCarry.getBits(1, true, false) == 1)) {
+                output.add((byte) bitCarry.getBits(8, true, true));
+                position += 1;
+                continue;
+            }
+
+            bitCarry.getBits(1, true, true); //It is definitely 0, we don't need it
+
+            //R: 01110001 -> 1 0 01110001
+            //R: 11110001 -> 1 0 11110001
             int length = (int) bitCarry.getBits(REFERENCE_LENGTH_SIZE) + MIN_DATA_LENGTH; //Length is encoded as 1 byte and 1 byte is 8 bits
             int distance = (int) bitCarry.getBits(REFERENCE_DISTANCE_SIZE) + MIN_DATA_DISTANCE; //Distance is encoded as 2 byte and 1 byte is 16 bits
 
@@ -98,5 +114,9 @@ public class LZ77Encoder {
 
         if (callback != null) { callback.accept(100f); }
         return BitCarry.copyBytes(output);
+    }
+
+    public static boolean isLeadingOne(long data, int size) {
+        return (((data >>> (size-1)) & 0x1) == 1);
     }
 }
