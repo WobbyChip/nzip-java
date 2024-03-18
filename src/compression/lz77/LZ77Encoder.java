@@ -48,7 +48,7 @@ public class LZ77Encoder {
                 position += length;
             } else {
                 //If length less than tree, then push byte as normal
-                bitCarry.pushByte(data[position]);
+                bitCarry.pushBits(data[position], 8);
                 position++;
             }
 
@@ -58,7 +58,7 @@ public class LZ77Encoder {
         //Write remaining bytes as raw data
         for (int i = position; i < data.length; i++) {
             bitCarry.pushBits(0, 1);
-            bitCarry.pushByte(data[i]);
+            bitCarry.pushBits(data[i], 8);
         }
 
         if (callback != null) { callback.accept(100f); }
@@ -73,13 +73,13 @@ public class LZ77Encoder {
         if (data.length == 0) { return data; }
         BitCarry bitCarry = new BitCarry(data);
         ArrayList<Byte> output = new ArrayList<>();
-        AtomicInteger position = new AtomicInteger();
+        int position = 0;
 
         while (bitCarry.availableBytes() > 0) {
             //If first bit is 0 then next byte is raw data
             if (bitCarry.getBits(1) == 0) {
                 output.add(bitCarry.getByte());
-                position.addAndGet(1);
+                position += 1;
                 continue;
             }
 
@@ -88,15 +88,15 @@ public class LZ77Encoder {
 
             //Copy bytes in loop from past
             for (int i = 0; i < length; i++) {
-                output.add(output.get((position.get() - distance + i)));
+                output.add(output.get((position - distance + i)));
             }
 
-            position.addAndGet(length); //Increase position by reference length
+            position += length; //Increase position by reference length
             int done = data.length - bitCarry.availableBytes(); //Calculate how many bytes we processed
             if (callback != null) { callback.accept((float) done/data.length*100); }
         }
 
-        if (callback != null) { callback.accept((float) 100); }
+        if (callback != null) { callback.accept(100f); }
         return BitCarry.copyBytes(output);
     }
 }
