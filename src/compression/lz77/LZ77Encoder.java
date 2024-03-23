@@ -7,7 +7,9 @@ import java.util.function.Consumer;
 
 public class LZ77Encoder {
     private static final int REFERENCE_LENGTH_SIZE = 8; //Size in bits to encode length
+    private static final int REFERENCE_SMALL_LENGTH_SIZE = 4; //Size in bits to encode small length
     private static final int REFERENCE_DISTANCE_SIZE = 16; //Size in bits to encode distance
+    private static final int REFERENCE_SMALL_DISTANCE_SIZE = 10; //Size in bits to encode small distance
 
     //This is because encoded reference uses 3 bytes + 1 bit while raw data uses 3 bytes and 3 bits
     //Yes, we can set it to 3, because 25 < 27, but then we sacrifice length, so in average file it will get worse
@@ -40,10 +42,14 @@ public class LZ77Encoder {
                 //If length more than 3 then encode distance and length and push them to bit carry
                 //-1 because (1 << 8): 256, 256 is out of range for byte [0; 255], and -MIN_DATA_LENGTH, because if (length > MIN_DATA_LENGTH)
                 int distance = position - reference[1] - MIN_DATA_DISTANCE; //Offset, aka, how much to go back
-                //System.out.println("{ " + length + " " + (position - reference[1]) + " " + distance + " }");
+                int ref_length = length - MIN_DATA_LENGTH;
+                boolean arg0 = (ref_length > ((1 << REFERENCE_SMALL_LENGTH_SIZE) - 1));
+                boolean arg1 = (distance > ((1 << REFERENCE_SMALL_DISTANCE_SIZE) - 1));
                 bitCarry.pushBits(0b10, 2); //This determines if next data encoded reference
-                bitCarry.pushBits((length - MIN_DATA_LENGTH), REFERENCE_LENGTH_SIZE);
-                bitCarry.pushBits(distance, REFERENCE_DISTANCE_SIZE);
+                bitCarry.pushBits(arg0 ? 1 : 0, 1);
+                bitCarry.pushBits(ref_length, arg0 ? REFERENCE_LENGTH_SIZE : REFERENCE_SMALL_LENGTH_SIZE);
+                bitCarry.pushBits(arg1 ? 1 : 0, 1);
+                bitCarry.pushBits(distance, arg1 ? REFERENCE_DISTANCE_SIZE : REFERENCE_SMALL_DISTANCE_SIZE);
                 position += length;
             } else {
                 //If length less than tree, then push byte as normal
@@ -98,8 +104,10 @@ public class LZ77Encoder {
 
             //R: 01110001 -> 1 0 01110001
             //R: 11110001 -> 1 0 11110001
-            int length = (int) bitCarry.getBits(REFERENCE_LENGTH_SIZE) + MIN_DATA_LENGTH; //Length is encoded as 1 byte and 1 byte is 8 bits
-            int distance = (int) bitCarry.getBits(REFERENCE_DISTANCE_SIZE) + MIN_DATA_DISTANCE; //Distance is encoded as 2 byte and 1 byte is 16 bits
+            boolean arg0 = bitCarry.getBits(1) == 1; //Check if we have long or short length
+            int length = (int) bitCarry.getBits(arg0 ? REFERENCE_LENGTH_SIZE : REFERENCE_SMALL_LENGTH_SIZE) + MIN_DATA_LENGTH; //Length is encoded as 1 byte and 1 byte is 8 bits
+            boolean arg1 = bitCarry.getBits(1) == 1; //Check if we have long or short distance
+            int distance = (int) bitCarry.getBits(arg1 ? REFERENCE_DISTANCE_SIZE : REFERENCE_SMALL_DISTANCE_SIZE) + MIN_DATA_DISTANCE; //Distance is encoded as 2 byte and 1 byte is 16 bits
 
             //Copy bytes in loop from past
             for (int i = 0; i < length; i++) {
