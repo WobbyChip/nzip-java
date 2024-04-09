@@ -32,6 +32,7 @@ public class LZ77Encoder {
         if (data.length == 0) { return data; }
         SuffixArray suffixArray = new SuffixArray(data, LOOK_AHEAD_BUFFER_SIZE, SEARCH_BUFFER_SIZE, MIN_DATA_LENGTH);
         BitCarry bitCarry = new BitCarry(); //Used to easily add data with ref bit
+        bitCarry.pushBits(1, 1); // Determine if data is compressed or no
         int position = 0;
 
         while (position < data.length - MIN_DATA_LENGTH) {
@@ -69,6 +70,13 @@ public class LZ77Encoder {
             bitCarry.pushBits(data[i], 8);
         }
 
+        //In case if compressed data is bigger than original, there is no point in storing it
+        if (bitCarry.getSize(false) > data.length) {
+            bitCarry.clear();
+            bitCarry.pushBits(0, 1);
+            bitCarry.pushBytes(data);
+        }
+
         if (callback != null) { callback.accept(100f); }
         return bitCarry.getBytes(true);
     }
@@ -80,10 +88,17 @@ public class LZ77Encoder {
     public static byte[] decompress(byte[] data, Consumer<Float> callback) {
         if (data.length == 0) { return data; }
         BitCarry bitCarry = new BitCarry(data);
+        boolean compressed = bitCarry.getBits(1) == 1;
         ArrayList<Byte> output = new ArrayList<>();
         int position = 0;
 
-        while (bitCarry.availableBytes() > 0) {
+        while (!compressed && (bitCarry.availableSize(false) > 0)) {
+            output.add((byte) bitCarry.getBits(8, true, true));
+            long done = data.length - bitCarry.availableSize(false); //Calculate how many bytes we processed
+            if (callback != null) { callback.accept((float) done/data.length*100); }
+        }
+
+        while (compressed && (bitCarry.availableSize(false) > 0)) {
             //D: 01110101 -> 01110101
             if (bitCarry.getBits(1, true, false) == 0) {
                 output.add((byte) bitCarry.getBits(8, true, true));
@@ -115,7 +130,7 @@ public class LZ77Encoder {
             }
 
             position += length; //Increase position by reference length
-            int done = data.length - bitCarry.availableBytes(); //Calculate how many bytes we processed
+            long done = data.length - bitCarry.availableSize(false); //Calculate how many bytes we processed
             if (callback != null) { callback.accept((float) done/data.length*100); }
         }
 

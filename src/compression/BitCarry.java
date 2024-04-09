@@ -82,7 +82,7 @@ public class BitCarry {
         return buffer;
     }
 
-    protected void clear() {
+    public void clear() {
         this.buffer.clear();
         carry_k = carry = 0;
         de_carry_k = de_carry = 0;
@@ -99,12 +99,12 @@ public class BitCarry {
         return copyBytes(buffer);
     }
 
-    public int availableBits() {
-        return (data.length - (pos+1))*8 + de_carry_k;
+    public long getSize(boolean bits) {
+        return buffer.size() * (bits ? 8L : 1L) + (bits ? carry_k : 0L);
     }
 
-    public int availableBytes() {
-        return (data.length - (pos+1));
+    public long availableSize(boolean bits) {
+        return (data.length - (pos+1)) * (bits ? 8L : 1L) + (bits ? de_carry_k : 0L);
     }
 
     public static String formatLong(long value) {
