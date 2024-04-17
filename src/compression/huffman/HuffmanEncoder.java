@@ -6,8 +6,8 @@ import java.util.*;
 import java.util.function.Consumer;
 
 public class HuffmanEncoder {
-    public static final int MAX_FREQUENCY_BITS_LENGTH = 6; //Frequency is integer, integer max binary length is 32, 32 max binary length is 6
-    public static final int MAX_POSITIVE_INTEGER_LENGTH = 31; //This is max size of positive integer in bits
+    private static final int MAX_FREQUENCY_BITS_LENGTH = 6; //Frequency is integer, integer max binary length is 32, 32 max binary length is 6
+    private static final int MAX_POSITIVE_INTEGER_LENGTH = 31; //This is max size of positive integer in bits
 
     @SafeVarargs
     public static byte[] compress(byte[] data, Consumer<Float> ...callbacks) {
