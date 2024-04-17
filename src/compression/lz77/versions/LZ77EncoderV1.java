@@ -26,6 +26,7 @@ public class LZ77EncoderV1 {
 
     private static final int SEARCH_BUFFER_SIZE = (1 << REFERENCE_DISTANCE_SIZE) + MIN_DATA_DISTANCE; //[0; 65535] which is 2 bytes used in encoding
 
+    @SafeVarargs
     public static byte[] compress(byte[] data, Consumer<Float>... callbacks) {
         if (data.length == 0) { return data; }
         SuffixArray suffixArray = new SuffixArray(data, LOOK_AHEAD_BUFFER_SIZE, SEARCH_BUFFER_SIZE, MIN_DATA_LENGTH);
@@ -79,6 +80,7 @@ public class LZ77EncoderV1 {
         return bitCarry.getBytes(true);
     }
 
+    @SafeVarargs
     public static byte[] decompress(byte[] data, Consumer<Float>... callbacks) {
         if (data.length == 0) { return data; }
         BitCarry bitCarry = new BitCarry(data);
