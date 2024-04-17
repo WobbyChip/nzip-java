@@ -23,7 +23,6 @@ public class LZ77EncoderV2 {
 
     //Because of cycling data new possible range is [1, 65536] in case of 111111111 -> 1<8, 1> so we add +1
     private static final int MIN_DATA_DISTANCE = 1;
-
     private static final int SEARCH_BUFFER_SIZE = (1 << REFERENCE_DISTANCE_SIZE) + MIN_DATA_DISTANCE; //[0; 65535] which is 2 bytes used in encoding
 
     //Return generated huffman tree for frequencies of length of repeating data and also list of references
