@@ -27,7 +27,7 @@ public class HuffmanEncoder {
 
         //Encode data from lookup table
         for (int i = 0; i < data.length; i++) {
-            HuffmanTree.Node node = huffman.getLookupTable().get((int) data[i]);
+            HuffmanTree.Node node = huffman.getLookupTable().get(data[i] & 0xff);
             bitCarry.pushBits(node.getBinary(), node.getBinaryLength());
             for (Consumer<Float> callback : callbacks) { callback.accept((float) i/data.length*100); }
         }
@@ -72,30 +72,49 @@ public class HuffmanEncoder {
         return BitCarry.copyBytes(output);
     }
 
-    private static void encodeHeader(BitCarry bitCarry, HuffmanTree huffman) {
-        int size = huffman.getFrequencies().size() - 1; //This cannot be more than 256, and since byte is [0, 255] and size cannot be 0, therefore -1
+    public static void encodeHeader(BitCarry bitCarry, HuffmanTree huffman) {
+        boolean empty = huffman.getFrequencies().isEmpty();
+        bitCarry.pushBits(empty ? 0b1 : 0b0, 1);
+        if (empty) { return; }
+
         int max_frequency = Collections.max(huffman.getFrequencies().values()); //Get max frequency, we will use it to know how many bits to use for it
         int max_frequency_bits = Integer.toBinaryString(max_frequency).length(); //Get length of max frequency
+        int max_value = Collections.max(huffman.getFrequencies().keySet()); //Get max value, we will use it to know how many bits to use for it
+        int max_value_bits = Integer.toBinaryString(max_value).length(); //Get length in bits of max value
+        int size = huffman.getFrequencies().size() - 1; //This cannot be more than 256, and since byte is [0, 255] and size cannot be 0, therefore -1
+        int size_bits = Integer.toBinaryString(size).length(); //Get size in bits for amount of elements count
+
+        //System.out.println("[encodeHeader]: Size: " + size + ", Max Frequency Bits: " + max_frequency_bits + ", Max Value Bits: " + max_value_bits + ", Size Bits: " + size_bits);
+
         bitCarry.pushBits(max_frequency_bits, MAX_FREQUENCY_BITS_LENGTH); //Save max frequency size in bits, this will help to reduce space
-        bitCarry.pushBits(size, 8); //Save frequency element count, so we know how much to read when decoding
+        bitCarry.pushBits(max_value_bits, MAX_FREQUENCY_BITS_LENGTH); //Save max amount size in bits, this will help make it universal
+        bitCarry.pushBits(size_bits, MAX_FREQUENCY_BITS_LENGTH); //Save max amount size in bits, this will help make it universal
+        bitCarry.pushBits(size, size_bits); //Save frequency element count, so we know how much to read when decoding
 
         //Save frequencies to bit carry
         for (Map.Entry<Integer, Integer> entry : huffman.getFrequencies().entrySet()) {
-            bitCarry.pushByte((byte) ((int) entry.getKey()));
+            bitCarry.pushBits(entry.getKey(), max_value_bits);
             bitCarry.pushBits(entry.getValue(), max_frequency_bits);
         }
     }
 
-    private static HuffmanTree decodeHeader(BitCarry bitCarry) {
+    public static HuffmanTree decodeHeader(BitCarry bitCarry) {
+        boolean empty = bitCarry.getBits(1) == 1;
+        if (empty) { return new HuffmanTree(new HashMap<>()); }
+
         int max_frequency_bits = (int) bitCarry.getBits(MAX_FREQUENCY_BITS_LENGTH); //Get info, how much space does frequency take
-        int size = (int) (bitCarry.getBits(8) + 1); //Then get info, how many frequencies we have
+        int max_value_bits = (int) bitCarry.getBits(MAX_FREQUENCY_BITS_LENGTH); //Get info, how much space does size take
+        int size_bits = (int) bitCarry.getBits(MAX_FREQUENCY_BITS_LENGTH); //Get info, how much space does size take
+        int size = (int) (bitCarry.getBits(size_bits) + 1); //Then get info, how many frequencies we have
         HashMap<Integer, Integer> frequencies = new HashMap<>(); //Make hash map to load frequencies
+
+        //System.out.println("[decodeHeader]: Size: " + size + ", Max Frequency Bits: " + max_frequency_bits + ", Max Value Bits: " + max_value_bits + ", Size Bits: " + size_bits);
 
         //Load frequencies into hashmap
         for (int i = 0; i < size; i++) {
-            byte character = bitCarry.getByte();
+            int character = (int) bitCarry.getBits(max_value_bits);
             int frequency = (int) bitCarry.getBits(max_frequency_bits);
-            frequencies.put((int) character, frequency);
+            frequencies.put(character, frequency);
         }
 
         //Build huffman tree from frequencies

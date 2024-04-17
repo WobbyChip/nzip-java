@@ -1,6 +1,7 @@
 package compression.lz77.versions;
 
 import compression.BitCarry;
+import compression.huffman.HuffmanEncoder;
 import compression.huffman.HuffmanTree;
 import compression.lz77.SuffixArray;
 
@@ -28,22 +29,9 @@ public class LZ77EncoderV2 {
 
     private static final int SEARCH_BUFFER_SIZE = (1 << REFERENCE_DISTANCE_SIZE) + MIN_DATA_DISTANCE; //[0; 65535] which is 2 bytes used in encoding
 
-    private static void encodeHeader(BitCarry bitCarry, HuffmanTree huffman) {
-        int size = huffman.getFrequencies().size() - 1;
-        int max_frequency = Collections.max(huffman.getFrequencies().values()); //Get max frequency, we will use it to know how many bits to use for it
-        int max_frequency_bits = Integer.toBinaryString(max_frequency).length(); //Get length of max frequency
-        bitCarry.pushBits(max_frequency_bits, MAX_FREQUENCY_BITS_LENGTH); //Save max frequency size in bits, this will help to reduce space
-        bitCarry.pushBits(size, 8); //Save frequency element count, so we know how much to read when decoding
-
-        //Save frequencies to bit carry
-        for (Map.Entry<Integer, Integer> entry : huffman.getFrequencies().entrySet()) {
-            bitCarry.pushByte((byte) ((int) entry.getKey()));
-            bitCarry.pushBits(entry.getValue(), max_frequency_bits);
-        }
-    }
-
     //Return generated huffman tree for frequencies of length of repeating data and also list of references
-    private static Map.Entry<HuffmanTree, List<int[]>> generateData(BitCarry bitCarry, byte[] data, Consumer<Float>... callbacks) {
+    @SafeVarargs
+    private static Map.Entry<HuffmanTree, List<int[]>> generateHeader(BitCarry bitCarry, byte[] data, Consumer<Float>... callbacks) {
         SuffixArray suffixArray = new SuffixArray(data, LOOK_AHEAD_BUFFER_SIZE, SEARCH_BUFFER_SIZE, MIN_DATA_LENGTH);
         List<int[]> references = new ArrayList<>(); //Store position as of position in buffer and store length as of ref_length
         HashMap<Integer, Integer> frequencies = new HashMap<>(); //Store frequencies of repeating length values
@@ -55,7 +43,8 @@ public class LZ77EncoderV2 {
 
             if (length >= MIN_DATA_LENGTH) {
                 references.add(new int[] { position, length, reference[1] });
-                frequencies.put(length, frequencies.getOrDefault(length, 0)+1);
+                int ref_length = length - MIN_DATA_LENGTH;
+                frequencies.put(ref_length, frequencies.getOrDefault(ref_length, 0)+1);
                 position += length;
             } else {
                 position++;
@@ -65,7 +54,7 @@ public class LZ77EncoderV2 {
         }
 
         HuffmanTree huffmanTree = new HuffmanTree(frequencies);
-        //encodeHeader(bitCarry, huffmanTree);
+        HuffmanEncoder.encodeHeader(bitCarry, huffmanTree);
         return Map.entry(huffmanTree, references);
     }
 
@@ -75,11 +64,11 @@ public class LZ77EncoderV2 {
         BitCarry bitCarry = new BitCarry(); //Used to easily manipulate bits
         bitCarry.pushBits(1, 1); // Determine if data is compressed or no
 
-        Map.Entry<HuffmanTree, List<int[]>> generatedData = generateData(bitCarry, data, callbacks);
+        Map.Entry<HuffmanTree, List<int[]>> header = generateHeader(bitCarry, data, callbacks);
         int position = 0; //Position for taking data from buffer
 
         //Write data with references
-        for (int[] reference : generatedData.getValue()) {
+        for (int[] reference : header.getValue()) {
             while (position != reference[0]) { //Get end position where reference was taken from
                 for (Consumer<Float> callback : callbacks) { callback.accept((float) 60+(position/data.length*40)); }
                 boolean b1 = isLeadingOne(data[position], 8);
@@ -134,6 +123,9 @@ public class LZ77EncoderV2 {
             long done = data.length - bitCarry.availableSize(false); //Calculate how many bytes we processed
             for (Consumer<Float> callback : callbacks) { callback.accept((float) done/data.length*100); }
         }
+
+        if (!compressed) { return BitCarry.copyBytes(output); }
+        HuffmanTree huffmanTree = HuffmanEncoder.decodeHeader(bitCarry);
 
         while (compressed && (bitCarry.availableSize(false) > 0)) {
             //D: 01110101 -> 01110101

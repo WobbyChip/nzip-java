@@ -7,7 +7,7 @@ import java.util.stream.Stream;
 //https://youtu.be/zSsTG3Flo-I
 
 public class HuffmanTree {
-    private final HashMap<Integer, Integer> frequencies = new HashMap<>();
+    private HashMap<Integer, Integer> frequencies = new HashMap<>();
     private final HashMap<Integer, Node> lookupTable = new HashMap<>();
     private Node root = null;
 
@@ -18,6 +18,7 @@ public class HuffmanTree {
     }
 
     public HuffmanTree(HashMap<Integer, Integer> frequencies) {
+        this.frequencies = frequencies;
         if (!frequencies.isEmpty()) { buildHuffmanTree(frequencies); }
         if (!frequencies.isEmpty()) { buildLookupTable(root, ""); }
     }
@@ -41,7 +42,7 @@ public class HuffmanTree {
         frequencies.clear();
 
         for (byte b : data) {
-            frequencies.put((int) b, frequencies.getOrDefault((int) b, 0)+1);
+            frequencies.put(b & 0xff, frequencies.getOrDefault(b & 0xff, 0)+1);
         }
     }
 
