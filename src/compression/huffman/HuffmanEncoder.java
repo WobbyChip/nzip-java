@@ -6,60 +6,70 @@ import java.util.*;
 import java.util.function.Consumer;
 
 public class HuffmanEncoder {
-    private static final int MAX_FREQUENCY_BITS_LENGTH = 6; //Frequency is integer, integer max binary length is 32, 32 max binary length is 6
-    private static final int MAX_POSITIVE_INTEGER_LENGTH = 31; //This is max size of positive integer in bits
+    public static final int MAX_FREQUENCY_BITS_LENGTH = 6; //Frequency is integer, integer max binary length is 32, 32 max binary length is 6
+    public static final int MAX_POSITIVE_INTEGER_LENGTH = 31; //This is max size of positive integer in bits
 
-    public static byte[] compress(byte[] data) {
-        return compress(data, ignored -> {});
-    }
-
-    public static byte[] compress(byte[] data, Consumer<Float> callback) {
+    public static byte[] compress(byte[] data, Consumer<Float> ...callbacks) {
         if (data.length == 0) { return data; }
-        return encodedTree(data, new HuffmanTree(data), callback);
+        return encodedTree(data, new HuffmanTree(data), callbacks);
     }
 
-    public static byte[] decompress(byte[] data) {
-        return decompress(data, ignored -> {});
-    }
-
-    public static byte[] decompress(byte[] data, Consumer<Float> callback) {
+    public static byte[] decompress(byte[] data, Consumer<Float> ...callbacks) {
         if (data.length == 0) { return data; }
-        return decodedTree(data, callback);
+        return decodedTree(data, callbacks);
     }
 
-    private static byte[] encodedTree(byte[] data, HuffmanTree huffman, Consumer<Float> callback) {
+    private static byte[] encodedTree(byte[] data, HuffmanTree huffman, Consumer<Float> ...callbacks) {
         BitCarry bitCarry = new BitCarry();
+        bitCarry.pushBits(1, 1); // Determine if data is compressed or no (BY DEFAULT YES)
         bitCarry.pushBits(data.length, MAX_POSITIVE_INTEGER_LENGTH); //We need to know data size so that we don't read final bits, which are not used
         encodeHeader(bitCarry, huffman); //Encode header, frequency map
 
         //Encode data from lookup table
         for (int i = 0; i < data.length; i++) {
-            HuffmanTree.Node node = huffman.getLookupTable().get(data[i]);
+            HuffmanTree.Node node = huffman.getLookupTable().get((int) data[i]);
             bitCarry.pushBits(node.getBinary(), node.getBinaryLength());
-            if (callback != null) { callback.accept((float) i/data.length*100); }
+            for (Consumer<Float> callback : callbacks) { callback.accept((float) i/data.length*100); }
+        }
+
+        //In case if compressed data is bigger than original, there is no point in storing it
+        if (bitCarry.getSize(false) > data.length) {
+            bitCarry.clear();
+            bitCarry.pushBits(0, 1);
+            bitCarry.pushBytes(data);
         }
 
         return bitCarry.getBytes(true);
     }
 
-    private static byte[] decodedTree(byte[] data, Consumer<Float> callback) {
+    private static byte[] decodedTree(byte[] data, Consumer<Float> ...callbacks) {
         BitCarry bitCarry = new BitCarry(data);
-        int size = (int) bitCarry.getBits(MAX_POSITIVE_INTEGER_LENGTH); //Get size of decoded file
-        ArrayList<Byte> buffer = new ArrayList<>();
-        HuffmanTree huffman = decodeHeader(bitCarry);
-        HuffmanTree.Node node = huffman.getRoot();
+        boolean compressed = bitCarry.getBits(1) == 1;
+        ArrayList<Byte> output = new ArrayList<>();
 
-        //Get bit by bit and navigate trough nodes to get back data until we reach file size
-        while (buffer.size() < size) {
-            byte binary = (byte) bitCarry.getBits(1); //Yes, this is not very efficient way, but I kinda don't care
-            node = (binary == 0) ? node.getLeftNode() : node.getRightNode(); //Depending on bit we go left or right
-            if (!node.isLeaf()) { continue; } //If node is a leaf, then we reached the end and should add data from it to buffer
-            buffer.add(node.getCharacter()); //Add node's character to buffer
-            if (callback != null) { callback.accept((float) buffer.size()/size*100); } //Just a simple progress callback
-            node = huffman.getRoot(); //After adding character we need to go back to root and start over
+        if (compressed) {
+            int size = (int) bitCarry.getBits(MAX_POSITIVE_INTEGER_LENGTH); //Get size of decoded file
+            HuffmanTree huffman = decodeHeader(bitCarry);
+            HuffmanTree.Node node = huffman.getRoot();
+
+            //Get bit by bit and navigate trough nodes to get back data until we reach file size
+            while (output.size() < size) {
+                byte binary = (byte) bitCarry.getBits(1); //Yes, this is not very efficient way, but I kinda don't care
+                node = (binary == 0) ? node.getLeftNode() : node.getRightNode(); //Depending on bit we go left or right
+                if (!node.isLeaf()) { continue; } //If node is a leaf, then we reached the end and should add data from it to buffer
+                output.add((byte) node.getCharacter()); //Add node's character to buffer
+                for (Consumer<Float> callback : callbacks) { callback.accept((float) output.size()/size*100); } //Just a simple progress callback
+                node = huffman.getRoot(); //After adding character we need to go back to root and start over
+            }
+        } else {
+            while (bitCarry.availableSize(false) > 0) {
+                output.add((byte) bitCarry.getBits(8, true, true));
+                long done = data.length - bitCarry.availableSize(false); //Calculate how many bytes we processed
+                for (Consumer<Float> callback : callbacks) { callback.accept((float) done/data.length*100); }
+            }
         }
 
-        return BitCarry.copyBytes(buffer);
+        return BitCarry.copyBytes(output);
     }
 
     private static void encodeHeader(BitCarry bitCarry, HuffmanTree huffman) {
@@ -70,8 +80,8 @@ public class HuffmanEncoder {
         bitCarry.pushBits(size, 8); //Save frequency element count, so we know how much to read when decoding
 
         //Save frequencies to bit carry
-        for (Map.Entry<Byte, Integer> entry : huffman.getFrequencies().entrySet()) {
-            bitCarry.pushByte(entry.getKey());
+        for (Map.Entry<Integer, Integer> entry : huffman.getFrequencies().entrySet()) {
+            bitCarry.pushByte((byte) ((int) entry.getKey()));
             bitCarry.pushBits(entry.getValue(), max_frequency_bits);
         }
     }
@@ -79,13 +89,13 @@ public class HuffmanEncoder {
     private static HuffmanTree decodeHeader(BitCarry bitCarry) {
         int max_frequency_bits = (int) bitCarry.getBits(MAX_FREQUENCY_BITS_LENGTH); //Get info, how much space does frequency take
         int size = (int) (bitCarry.getBits(8) + 1); //Then get info, how many frequencies we have
-        HashMap<Byte, Integer> frequencies = new HashMap<>(); //Make hash map to load frequencies
+        HashMap<Integer, Integer> frequencies = new HashMap<>(); //Make hash map to load frequencies
 
         //Load frequencies into hashmap
         for (int i = 0; i < size; i++) {
             byte character = bitCarry.getByte();
             int frequency = (int) bitCarry.getBits(max_frequency_bits);
-            frequencies.put(character, frequency);
+            frequencies.put((int) character, frequency);
         }
 
         //Build huffman tree from frequencies

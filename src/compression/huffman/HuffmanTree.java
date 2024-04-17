@@ -2,12 +2,13 @@ package compression.huffman;
 
 import java.math.BigInteger;
 import java.util.*;
+import java.util.stream.Stream;
 
 //https://youtu.be/zSsTG3Flo-I
 
 public class HuffmanTree {
-    private final HashMap<Byte, Integer> frequencies = new HashMap<>();
-    private final HashMap<Byte, Node> lookupTable = new HashMap<>();
+    private final HashMap<Integer, Integer> frequencies = new HashMap<>();
+    private final HashMap<Integer, Node> lookupTable = new HashMap<>();
     private Node root = null;
 
     public HuffmanTree(byte[] data) {
@@ -16,16 +17,22 @@ public class HuffmanTree {
         buildLookupTable(root, "");
     }
 
-    public HuffmanTree(HashMap<Byte, Integer> frequencies) {
+    public HuffmanTree(List<Integer> data) {
+        createFrequencyMap(data);
         buildHuffmanTree(frequencies);
         buildLookupTable(root, "");
     }
 
-    public HashMap<Byte, Node> getLookupTable() {
+    public HuffmanTree(HashMap<Integer, Integer> frequencies) {
+        if (!frequencies.isEmpty()) { buildHuffmanTree(frequencies); }
+        if (!frequencies.isEmpty()) { buildLookupTable(root, ""); }
+    }
+
+    public HashMap<Integer, Node> getLookupTable() {
         return lookupTable;
     }
 
-    public HashMap<Byte, Integer> getFrequencies() {
+    public HashMap<Integer, Integer> getFrequencies() {
         return frequencies;
     }
 
@@ -40,31 +47,36 @@ public class HuffmanTree {
         frequencies.clear();
 
         for (byte b : data) {
-            frequencies.put(b, frequencies.getOrDefault(b, 0)+1);
+            frequencies.put((int) b, frequencies.getOrDefault((int) b, 0)+1);
         }
+    }
+
+    private void createFrequencyMap(List<Integer> data) {
+        frequencies.clear();
+        data.forEach(e -> frequencies.put(e, frequencies.getOrDefault(e, 0)+1));
     }
 
     //Here we build the tree using frequencies
     //https://upload.wikimedia.org/wikipedia/commons/d/d8/HuffmanCodeAlg.png
-    private void buildHuffmanTree(HashMap<Byte, Integer> frequencies) {
+    private void buildHuffmanTree(HashMap<Integer, Integer> frequencies) {
         PriorityQueue<Node> queue = new PriorityQueue<>();
 
         //Add all frequencies to queue
-        for (Map.Entry<Byte, Integer> entry : frequencies.entrySet()) {
+        for (Map.Entry<Integer, Integer> entry : frequencies.entrySet()) {
             queue.add(new Node(entry.getKey(), entry.getValue()));
         }
 
-        //This is in case if data is 1 byte, we need at least 2 to create tree,
+        //This is in case if data is 0 or 1 byte, we need at least 2 or 3 to create tree,
         //Then we just create empty node, it technically will never be used
         if (queue.size() == 1) {
-            queue.add(new Node((byte) 0, 1));
+            queue.add(new Node(0, 1));
         }
 
         //Now we need to combine all nodes together and build a tree, until we have left with 1 node which is root
         while (queue.size() > 1) {
             Node left = queue.poll();
             Node right = queue.poll(); //Merge 2 smallest by frequency nodes and create a new node
-            Node parent = new Node((byte) 0, (left.getFrequency() + right.getFrequency()), left, right);
+            Node parent = new Node(0, (left.getFrequency() + right.getFrequency()), left, right);
             queue.add(parent);
         }
 
@@ -83,19 +95,19 @@ public class HuffmanTree {
         }
     }
 
-    static class Node implements Comparable<Node> {
+    public static class Node implements Comparable<Node> {
         private long binary;
         private int binaryLength;
-        private final byte character;
+        private final int character;
         private final int frequency;
-        private Node leftNode;
-        private Node rightNode;
+        private final Node leftNode;
+        private final Node rightNode;
 
-        public Node(byte character, int frequency) {
+        public Node(int character, int frequency) {
             this(character, frequency, null, null);
         }
 
-        public Node(byte character, int frequency, Node leftNode, Node rightNode) {
+        public Node(int character, int frequency, Node leftNode, Node rightNode) {
             this.character = character;
             this.frequency = frequency;
             this.leftNode = leftNode;
@@ -106,7 +118,7 @@ public class HuffmanTree {
             return frequency;
         }
 
-        public byte getCharacter() {
+        public int getCharacter() {
             return character;
         }
 
