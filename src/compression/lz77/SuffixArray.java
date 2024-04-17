@@ -115,7 +115,7 @@ public class SuffixArray {
             // [578 584 587 620 623 626 1797 2175 2178 2181] Indexes of data in file for specific suffix
             //         |     searchBufferSize    |           We can only go back as much as search buffer size allows us
             //                             <- position
-            //linkedList: [-1 587 620 623 626 1797 2175 -1]  We insert after head, because we need to preserve same order, but loop goes backwards
+            //linkedList: [587 620 623 626 1797 2175]        We insert after head, because we need to preserve same order, but loop goes backwards
 
             int index = indexes.get(i);
             if (position - index >= searchBufferSize) { break; } //Don't include indexes which go outisde search buffer size

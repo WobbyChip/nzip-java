@@ -76,10 +76,10 @@ public class HuffmanEncoder {
         return BitCarry.copyBytes(output);
     }
 
-    public static void encodeHeader(BitCarry bitCarry, HuffmanTree huffman) {
+    public static HuffmanTree encodeHeader(BitCarry bitCarry, HuffmanTree huffman) {
         boolean empty = huffman.getFrequencies().isEmpty();
         bitCarry.pushBits(empty ? 0b1 : 0b0, 1);
-        if (empty) { return; }
+        if (empty) { return huffman; }
 
         int max_frequency = Collections.max(huffman.getFrequencies().values()); //Get max frequency, we will use it to know how many bits to use for it
         int max_frequency_bits = Integer.toBinaryString(max_frequency).length(); //Get length of max frequency
@@ -100,6 +100,8 @@ public class HuffmanEncoder {
             bitCarry.pushBits(entry.getKey(), max_value_bits);
             bitCarry.pushBits(entry.getValue(), max_frequency_bits);
         }
+
+        return huffman;
     }
 
     public static HuffmanTree decodeHeader(BitCarry bitCarry) {

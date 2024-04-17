@@ -2,6 +2,7 @@ package compression.lz77;
 
 import compression.lz77.versions.LZ77EncoderV1;
 import compression.lz77.versions.LZ77EncoderV2;
+import compression.lz77.versions.LZ77EncoderV3;
 
 import java.util.function.Consumer;
 
