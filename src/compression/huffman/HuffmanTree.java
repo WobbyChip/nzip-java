@@ -17,12 +17,6 @@ public class HuffmanTree {
         buildLookupTable(root, "");
     }
 
-    public HuffmanTree(List<Integer> data) {
-        createFrequencyMap(data);
-        buildHuffmanTree(frequencies);
-        buildLookupTable(root, "");
-    }
-
     public HuffmanTree(HashMap<Integer, Integer> frequencies) {
         if (!frequencies.isEmpty()) { buildHuffmanTree(frequencies); }
         if (!frequencies.isEmpty()) { buildLookupTable(root, ""); }
@@ -49,11 +43,6 @@ public class HuffmanTree {
         for (byte b : data) {
             frequencies.put((int) b, frequencies.getOrDefault((int) b, 0)+1);
         }
-    }
-
-    private void createFrequencyMap(List<Integer> data) {
-        frequencies.clear();
-        data.forEach(e -> frequencies.put(e, frequencies.getOrDefault(e, 0)+1));
     }
 
     //Here we build the tree using frequencies
