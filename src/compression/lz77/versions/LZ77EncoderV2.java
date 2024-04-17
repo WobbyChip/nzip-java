@@ -12,7 +12,6 @@ import static compression.huffman.HuffmanEncoder.MAX_FREQUENCY_BITS_LENGTH;
 
 public class LZ77EncoderV2 {
     private static final int REFERENCE_LENGTH_SIZE = 8; //Size in bits to encode length
-    private static final int REFERENCE_SMALL_LENGTH_SIZE = 4; //Size in bits to encode small length
     private static final int REFERENCE_DISTANCE_SIZE = 16; //Size in bits to encode distance
     private static final int REFERENCE_SMALL_DISTANCE_SIZE = 10; //Size in bits to encode small distance
 
@@ -65,6 +64,7 @@ public class LZ77EncoderV2 {
         bitCarry.pushBits(1, 1); // Determine if data is compressed or no
 
         Map.Entry<HuffmanTree, List<int[]>> header = generateHeader(bitCarry, data, callbacks);
+        HuffmanTree huffmanTree = header.getKey();
         int position = 0; //Position for taking data from buffer
 
         //Write data with references
@@ -81,11 +81,10 @@ public class LZ77EncoderV2 {
             int distance = reference[2]; //Position from where to copy data
             int offset = position - distance - MIN_DATA_DISTANCE; //Offset, aka, how much to go back
             int ref_length = length - MIN_DATA_LENGTH;
-            boolean arg0 = (ref_length > ((1 << REFERENCE_SMALL_LENGTH_SIZE) - 1));
             boolean arg1 = (offset > ((1 << REFERENCE_SMALL_DISTANCE_SIZE) - 1));
             bitCarry.pushBits(0b10, 2); //This determines if next data encoded reference
-            bitCarry.pushBits(arg0 ? 1 : 0, 1);
-            bitCarry.pushBits(ref_length, arg0 ? REFERENCE_LENGTH_SIZE : REFERENCE_SMALL_LENGTH_SIZE);
+            HuffmanTree.Node node = huffmanTree.getLookupTable().get(ref_length);
+            bitCarry.pushBits(node.getBinary(), node.getBinaryLength()); //Save length as huffman binary path
             bitCarry.pushBits(arg1 ? 1 : 0, 1);
             bitCarry.pushBits(offset, arg1 ? REFERENCE_DISTANCE_SIZE : REFERENCE_SMALL_DISTANCE_SIZE);
             position += length;
@@ -115,6 +114,7 @@ public class LZ77EncoderV2 {
         if (data.length == 0) { return data; }
         BitCarry bitCarry = new BitCarry(data);
         boolean compressed = bitCarry.getBits(1) == 1;
+        HuffmanTree huffmanTree = compressed ? HuffmanEncoder.decodeHeader(bitCarry) : null;
         ArrayList<Byte> output = new ArrayList<>();
         int position = 0;
 
@@ -123,9 +123,6 @@ public class LZ77EncoderV2 {
             long done = data.length - bitCarry.availableSize(false); //Calculate how many bytes we processed
             for (Consumer<Float> callback : callbacks) { callback.accept((float) done/data.length*100); }
         }
-
-        if (!compressed) { return BitCarry.copyBytes(output); }
-        HuffmanTree huffmanTree = HuffmanEncoder.decodeHeader(bitCarry);
 
         while (compressed && (bitCarry.availableSize(false) > 0)) {
             //D: 01110101 -> 01110101
@@ -148,8 +145,7 @@ public class LZ77EncoderV2 {
 
             //R: 01110001 -> 1 0 01110001
             //R: 11110001 -> 1 0 11110001
-            boolean arg0 = bitCarry.getBits(1) == 1; //Check if we have long or short length
-            int length = (int) bitCarry.getBits(arg0 ? REFERENCE_LENGTH_SIZE : REFERENCE_SMALL_LENGTH_SIZE) + MIN_DATA_LENGTH; //Length is encoded as 1 byte and 1 byte is 8 bits
+            int length = getHuffmanLength(bitCarry, huffmanTree) + MIN_DATA_LENGTH; //Length is encoded as huffman binary path + MIN_DATA_LENGTH
             boolean arg1 = bitCarry.getBits(1) == 1; //Check if we have long or short distance
             int distance = (int) bitCarry.getBits(arg1 ? REFERENCE_DISTANCE_SIZE : REFERENCE_SMALL_DISTANCE_SIZE) + MIN_DATA_DISTANCE; //Distance is encoded as 2 byte and 1 byte is 16 bits
 
@@ -169,5 +165,17 @@ public class LZ77EncoderV2 {
 
     public static boolean isLeadingOne(long data, int size) {
         return (((data >>> (size-1)) & 0x1) == 1);
+    }
+
+    private static int getHuffmanLength(BitCarry bitCarry, HuffmanTree huffmanTree) {
+        HuffmanTree.Node node = huffmanTree.getRoot();
+
+        //Get bit by bit and navigate trough nodes to get back data until we reach the end
+        while (true) {
+            byte binary = (byte) bitCarry.getBits(1); //Yes, this is not very efficient way, but I kinda don't care
+            node = (binary == 0) ? node.getLeftNode() : node.getRightNode(); //Depending on bit we go left or right
+            if (!node.isLeaf()) { continue; } //If node is a leaf, then we reached the end and should get data
+            return node.getCharacter(); //Get length from huffman node
+        }
     }
 }

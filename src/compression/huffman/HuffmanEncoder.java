@@ -19,15 +19,15 @@ public class HuffmanEncoder {
         return decodedTree(data, callbacks);
     }
 
-    private static byte[] encodedTree(byte[] data, HuffmanTree huffman, Consumer<Float> ...callbacks) {
+    private static byte[] encodedTree(byte[] data, HuffmanTree huffmanTree, Consumer<Float> ...callbacks) {
         BitCarry bitCarry = new BitCarry();
         bitCarry.pushBits(1, 1); // Determine if data is compressed or no (BY DEFAULT YES)
         bitCarry.pushBits(data.length, MAX_POSITIVE_INTEGER_LENGTH); //We need to know data size so that we don't read final bits, which are not used
-        encodeHeader(bitCarry, huffman); //Encode header, frequency map
+        encodeHeader(bitCarry, huffmanTree); //Encode header, frequency map
 
         //Encode data from lookup table
         for (int i = 0; i < data.length; i++) {
-            HuffmanTree.Node node = huffman.getLookupTable().get(data[i] & 0xff);
+            HuffmanTree.Node node = huffmanTree.getLookupTable().get(data[i] & 0xff);
             bitCarry.pushBits(node.getBinary(), node.getBinaryLength());
             for (Consumer<Float> callback : callbacks) { callback.accept((float) i/data.length*100); }
         }
