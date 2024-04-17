@@ -8,8 +8,6 @@ import compression.lz77.SuffixArray;
 import java.util.*;
 import java.util.function.Consumer;
 
-import static compression.huffman.HuffmanEncoder.MAX_FREQUENCY_BITS_LENGTH;
-
 public class LZ77EncoderV2 {
     private static final int REFERENCE_LENGTH_SIZE = 8; //Size in bits to encode length
     private static final int REFERENCE_DISTANCE_SIZE = 16; //Size in bits to encode distance
