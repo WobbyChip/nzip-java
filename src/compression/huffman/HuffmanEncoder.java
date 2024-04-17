@@ -9,16 +9,19 @@ public class HuffmanEncoder {
     public static final int MAX_FREQUENCY_BITS_LENGTH = 6; //Frequency is integer, integer max binary length is 32, 32 max binary length is 6
     public static final int MAX_POSITIVE_INTEGER_LENGTH = 31; //This is max size of positive integer in bits
 
+    @SafeVarargs
     public static byte[] compress(byte[] data, Consumer<Float> ...callbacks) {
         if (data.length == 0) { return data; }
         return encodedTree(data, new HuffmanTree(data), callbacks);
     }
 
+    @SafeVarargs
     public static byte[] decompress(byte[] data, Consumer<Float> ...callbacks) {
         if (data.length == 0) { return data; }
         return decodedTree(data, callbacks);
     }
 
+    @SafeVarargs
     private static byte[] encodedTree(byte[] data, HuffmanTree huffmanTree, Consumer<Float> ...callbacks) {
         BitCarry bitCarry = new BitCarry();
         bitCarry.pushBits(1, 1); // Determine if data is compressed or no (BY DEFAULT YES)
@@ -42,6 +45,7 @@ public class HuffmanEncoder {
         return bitCarry.getBytes(true);
     }
 
+    @SafeVarargs
     private static byte[] decodedTree(byte[] data, Consumer<Float> ...callbacks) {
         BitCarry bitCarry = new BitCarry(data);
         boolean compressed = bitCarry.getBits(1) == 1;
