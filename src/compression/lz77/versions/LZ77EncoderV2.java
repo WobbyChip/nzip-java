@@ -46,7 +46,7 @@ public class LZ77EncoderV2 {
                 position++;
             }
 
-            for (Consumer<Float> callback : callbacks) { callback.accept((float) position/data.length*60); }
+            for (Consumer<Float> callback : callbacks) { callback.accept((float) position/data.length*60f); }
         }
 
         HuffmanTree huffmanTree = new HuffmanTree(frequencies);
@@ -67,7 +67,7 @@ public class LZ77EncoderV2 {
         //Write data with references
         for (int[] reference : header.getValue()) {
             while (position != reference[0]) { //Get end position where reference was taken from
-                for (Consumer<Float> callback : callbacks) { callback.accept((float) 60+(position/data.length*40)); }
+                for (Consumer<Float> callback : callbacks) { callback.accept(60+((float) position/data.length*30f)); }
                 boolean b1 = isLeadingOne(data[position], 8);
                 if (b1) { bitCarry.pushBits(1, 1); }  //This determines if next data is raw data that starts with 1 bit
                 bitCarry.pushBits(data[position], 8);
@@ -87,19 +87,20 @@ public class LZ77EncoderV2 {
             position += length;
         }
 
-        //Write remaining bytes as raw data
-        for (int i = position; i < data.length; i++) {
-            for (Consumer<Float> callback : callbacks) { callback.accept((float) 60+(position/data.length*40)); }
-            boolean b1 = isLeadingOne(data[i], 8);
-            if (b1) { bitCarry.pushBits(1, 1); }
-            bitCarry.pushBits(data[i], 8);
-        }
+        boolean isBigger = (bitCarry.getSize(false) + (data.length - position)) > data.length;
 
         //In case if compressed data is bigger than original, there is no point in storing it
-        if (bitCarry.getSize(false) > data.length) {
+        if (isBigger) {
             bitCarry.clear();
             bitCarry.pushBits(0, 1);
-            bitCarry.pushBytes(data);
+            position = 0;
+        }
+
+        //Write remaining bytes as raw data
+        for (int i = position; i < data.length; i++) {
+            for (Consumer<Float> callback : callbacks) { callback.accept(90+((float) i/data.length*10f)); }
+            if (!isBigger && isLeadingOne(data[i], 8)) { bitCarry.pushBits(1, 1); }
+            bitCarry.pushBits(data[i], 8);
         }
 
         for (Consumer<Float> callback : callbacks) { callback.accept(100f); }

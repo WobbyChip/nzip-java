@@ -1,8 +1,9 @@
 package compression.huffman;
 
 import java.math.BigInteger;
-import java.util.*;
-import java.util.stream.Stream;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.PriorityQueue;
 
 //https://youtu.be/zSsTG3Flo-I
 

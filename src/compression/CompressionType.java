@@ -16,7 +16,7 @@ public enum CompressionType {
     private final String name;
     private final String extension;
 
-    private CompressionType(String name, String extension) {
+    CompressionType(String name, String extension) {
         this.name = name;
         this.extension = extension;
     }
@@ -36,29 +36,25 @@ public enum CompressionType {
     }
 
     public static CompressionType getCompressed(String filename) {
-        String extension = filename.substring(filename.lastIndexOf('.'));
+        String extension = filename.substring(Math.max(filename.lastIndexOf('.'), 0));
         return Stream.of(COMPRESSION_TYPES).filter(e -> e.getExtension().equalsIgnoreCase(extension)).findFirst().orElse(null);
     }
 
     @SafeVarargs
     public final byte[] compress(byte[] data, Consumer<Float>... callbacks) {
-        switch (this) {
+        return switch (this) {
             case DEFLATE -> Deflate.compress(data, callbacks);
             case HUFFMAN -> HuffmanEncoder.compress(data, callbacks);
             case LZSS -> LZ77Encoder.compress(data, callbacks);
-        }
-
-        return null;
+        };
     }
 
     @SafeVarargs
     public final byte[] decompress(byte[] data, Consumer<Float>... callbacks) {
-        switch (this) {
+        return switch (this) {
             case DEFLATE -> Deflate.decompress(data, callbacks);
             case HUFFMAN -> HuffmanEncoder.decompress(data, callbacks);
             case LZSS -> LZ77Encoder.decompress(data, callbacks);
-        }
-
-        return null;
+        };
     }
 }

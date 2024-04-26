@@ -1,7 +1,6 @@
 package compression.lz77.versions;
 
 import compression.BitCarry;
-import compression.lz77.LZ77Encoder;
 import compression.lz77.SuffixArray;
 
 import java.util.ArrayList;
