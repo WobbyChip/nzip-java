@@ -2,6 +2,7 @@
 
 import javax.swing.*;
 
+import compression.CompressionType;
 import compression.lz77.LZ77Encoder;
 import compression.deflate.Deflate;
 import compression.huffman.HuffmanEncoder;
@@ -29,7 +30,7 @@ public class GUI {
     private JLabel fileCompressRatio;
     private JButton selectFileButton;
     private JButton fileOperationButton;
-    private JComboBox<String> compressionDropdown;
+    private JComboBox<CompressionType> compressionDropdown;
     private JTextField filePath;
     private JTextField fileNewName;
     private JProgressBar fileCompressProg;
@@ -40,7 +41,7 @@ public class GUI {
     private Boolean toCompress = true;
 
     public GUI() {
-        mainWindow = new JFrame("Ni.zip");
+        mainWindow = new JFrame("negro.zip compressor");
         mainWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         mainWindow.setLayout(new GridLayout(3,1));
         mainWindow.setLocationRelativeTo(null);
@@ -62,8 +63,7 @@ public class GUI {
         // File Selection JPanel
         
         // MAKE SURE THESE ALIGN WITH WITH THE archiveExtensions ARRAY
-        String[] choices = { "Huffman", "LZ77", "ni.zip" };
-        compressionDropdown = new JComboBox<>(choices);
+        compressionDropdown = new JComboBox<>(CompressionType.COMPRESSION_TYPES);
         compressionDropdown.addItemListener(e -> {
         	if (e.getStateChange() == ItemEvent.SELECTED) {
         		newFileExt = archiveExtensions[compressionDropdown.getSelectedIndex()];
@@ -75,48 +75,47 @@ public class GUI {
         filePath.setEnabled(false);
         filePath.setDisabledTextColor(Color.BLACK);
         filePath.setBackground(mainWindow.getBackground());
-
         selectFileButton = new JButton("Select File");
+
         selectFileButton.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setCurrentDirectory(new File(System.getProperty("user.home") + "/Desktop"));
-            int returnValue = fileChooser.showOpenDialog(mainWindow);
-            if (returnValue == JFileChooser.APPROVE_OPTION) {
-            	fileCompressProg.setValue(0);
-            	fileCompressRatio.setText("");
-                File selectedFile = fileChooser.getSelectedFile();
-                filePath.setText(selectedFile.getAbsolutePath());
-                
-                fileName = selectedFile.getName();
-                String fileExt = fileName.substring(fileName.indexOf("."));
-                if (Arrays.asList(archiveExtensions).contains(fileExt)) {
-                	String[] temp_choices = {"Decompress"};
-					DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>(temp_choices);
-					compressionDropdown.setModel(model);
-					compressionDropdown.setEnabled(false);
-					newFileExt = fileExt;
-					
-					// Change button name to reflect the change.
-					fileOperationButton.setText("Decompress");
-					
-					// Recalculate window size so that elements aren't out of bounds
-					mainWindow.pack();
-					toCompress = false;
-                } else {
-                	// We set these anyway in case the user selects an archive and then selects a regular file instead.
-                	DefaultComboBoxModel<String> model = new DefaultComboBoxModel<>(choices);
-					compressionDropdown.setModel(model);
-					compressionDropdown.setEnabled(true);
-                	fileOperationButton.setText("Compress");
-                	
-                	newFileExt = archiveExtensions[compressionDropdown.getSelectedIndex()];
-            		fileNewName.setText(fileName+newFileExt);
-            		fileNewName.setForeground(Color.BLACK);
-                	
-					// Recalculate window size so that elements aren't out of bounds
-					mainWindow.pack();
-                	toCompress = true;
-                }
+            if (fileChooser.showOpenDialog(mainWindow) != JFileChooser.APPROVE_OPTION) { return; }
+
+            fileCompressProg.setValue(0);
+            fileCompressRatio.setText("");
+            File selectedFile = fileChooser.getSelectedFile();
+            filePath.setText(selectedFile.getAbsolutePath());
+
+            fileName = selectedFile.getName();
+            String fileExt = fileName.substring(fileName.indexOf("."));
+
+            if (Arrays.asList(archiveExtensions).contains(fileExt)) {
+                DefaultComboBoxModel<CompressionType> model = new DefaultComboBoxModel<>(CompressionType.COMPRESSION_TYPES);
+                compressionDropdown.setModel(model);
+                compressionDropdown.setEnabled(false);
+                newFileExt = fileExt;
+
+                // Change button name to reflect the change.
+                fileOperationButton.setText("Decompress");
+
+                // Recalculate window size so that elements aren't out of bounds
+                mainWindow.pack();
+                toCompress = false;
+            } else {
+                // We set these anyway in case the user selects an archive and then selects a regular file instead.
+                DefaultComboBoxModel<CompressionType> model = new DefaultComboBoxModel<>(CompressionType.COMPRESSION_TYPES);
+                compressionDropdown.setModel(model);
+                compressionDropdown.setEnabled(true);
+                fileOperationButton.setText("Compress");
+
+                newFileExt = archiveExtensions[compressionDropdown.getSelectedIndex()];
+                fileNewName.setText(fileName+newFileExt);
+                fileNewName.setForeground(Color.BLACK);
+
+                // Recalculate window size so that elements aren't out of bounds
+                mainWindow.pack();
+                toCompress = true;
             }
         });
         fileSelect.add(compressionDropdown);
@@ -147,6 +146,8 @@ public class GUI {
                 	} catch (IOException ex) {
         	            System.out.println(ex.getMessage());
         			}
+
+                    CompressionType compressionType = compressionDropdown.getItemAt(compressionDropdown.getSelectedIndex());
 
                     Consumer<Float> callback = progress -> {
                         fileCompressProg.setValue(Math.round(progress));
@@ -195,8 +196,7 @@ public class GUI {
         
         fileDetails.add(fileCompressProg);
         fileDetails.add(fileCompressRatio);        
-        
-        
+
 		//////////////////////////
 		// Adding all Panels to Main Frame and aligning them to be center aligned.
 
