@@ -2,7 +2,7 @@
 
 This is a Java-based file compression utility that supports both GUI and command-line interfaces. It provides functionalities for compressing and decompressing files using different compression algorithms. It was made as a university project, so don't expect anything good, because it was made in a week and improved little by little later.
 
-<p align="center"><img src="https://i.imgur.com/mLC0NlO.png"/></p>
+<p align="center"><img src="https://i.imgur.com/0rHIJRh.png"/></p>
 
 ## Features:
 
