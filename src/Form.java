@@ -98,7 +98,7 @@ public class Form {
                 int filesize = data.length;
                 if (!compressing) { data = compressionType.decompress(data, callback); }
                 if (compressing) { data = compressionType.compress(data, callback); }
-                if (compressing) label1.setText(String.format(Locale.US, "Compression -> Type: %s, Ratio: %.2f", compressionType.getName(), ((float) filesize/data.length)));
+                if (compressing) label1.setText(String.format(Locale.US, "Compression => Type: %s, Ratio: %.2f", compressionType.getName(), ((float) filesize/data.length)));
                 Files.write(Paths.get(result_filename), data);
                 JOptionPane.showMessageDialog(jFrame, "File was compressed/decompressed!");
             } catch (Exception ex) {
