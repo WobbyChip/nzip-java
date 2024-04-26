@@ -64,12 +64,6 @@ public class GUI {
         
         // MAKE SURE THESE ALIGN WITH WITH THE archiveExtensions ARRAY
         compressionDropdown = new JComboBox<>(CompressionType.COMPRESSION_TYPES);
-        compressionDropdown.addItemListener(e -> {
-        	if (e.getStateChange() == ItemEvent.SELECTED) {
-        		newFileExt = archiveExtensions[compressionDropdown.getSelectedIndex()];
-        		if (!fileNewName.getText().equals("New File Name")) fileNewName.setText(fileNewName.getText().substring(0, fileNewName.getText().indexOf("."))+newFileExt);
-        	}
-        });
         
         filePath = new JTextField(16);
         filePath.setEnabled(false);
@@ -84,40 +78,25 @@ public class GUI {
 
             fileCompressProg.setValue(0);
             fileCompressRatio.setText("");
-            File selectedFile = fileChooser.getSelectedFile();
-            filePath.setText(selectedFile.getAbsolutePath());
+            filePath.setText(fileChooser.getSelectedFile().getAbsolutePath());
+            CompressionType compressionType = CompressionType.getCompressed(filePath.getText());
 
-            fileName = selectedFile.getName();
-            String fileExt = fileName.substring(fileName.indexOf("."));
-
-            if (Arrays.asList(archiveExtensions).contains(fileExt)) {
-                DefaultComboBoxModel<CompressionType> model = new DefaultComboBoxModel<>(CompressionType.COMPRESSION_TYPES);
-                compressionDropdown.setModel(model);
+            if (compressionType != null) {
+                int index = Arrays.asList(CompressionType.COMPRESSION_TYPES).indexOf(compressionType);
                 compressionDropdown.setEnabled(false);
-                newFileExt = fileExt;
-
-                // Change button name to reflect the change.
+                compressionDropdown.setSelectedIndex(index);
                 fileOperationButton.setText("Decompress");
-
-                // Recalculate window size so that elements aren't out of bounds
-                mainWindow.pack();
-                toCompress = false;
+                mainWindow.pack(); // Recalculate window size so that elements aren't out of bounds
             } else {
                 // We set these anyway in case the user selects an archive and then selects a regular file instead.
-                DefaultComboBoxModel<CompressionType> model = new DefaultComboBoxModel<>(CompressionType.COMPRESSION_TYPES);
-                compressionDropdown.setModel(model);
                 compressionDropdown.setEnabled(true);
                 fileOperationButton.setText("Compress");
-
-                newFileExt = archiveExtensions[compressionDropdown.getSelectedIndex()];
-                fileNewName.setText(fileName+newFileExt);
+                fileNewName.setText(fileName);
                 fileNewName.setForeground(Color.BLACK);
-
-                // Recalculate window size so that elements aren't out of bounds
-                mainWindow.pack();
-                toCompress = true;
+                mainWindow.pack(); // Recalculate window size so that elements aren't out of bounds
             }
         });
+
         fileSelect.add(compressionDropdown);
         fileSelect.add(filePath);
         fileSelect.add(selectFileButton);
@@ -125,7 +104,7 @@ public class GUI {
         //////////////////////////
         // File Operation JPanel
         
-        fileNewName = new JTextField("New File Name");
+        fileNewName = new JTextField("Selected file");
         fileNewName.setEnabled(false);
         fileNewName.setDisabledTextColor(Color.GRAY);
         //fileNewName.setMargin(new Insets(0, 0, 10, 0));

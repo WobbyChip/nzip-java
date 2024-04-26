@@ -36,7 +36,7 @@ public enum CompressionType {
     }
 
     public static CompressionType getCompressed(String filename) {
-        String extension = filename.substring(0, filename.lastIndexOf('.'));
+        String extension = filename.substring(filename.lastIndexOf('.'));
         return Stream.of(COMPRESSION_TYPES).filter(e -> e.getExtension().equalsIgnoreCase(extension)).findFirst().orElse(null);
     }
 
