@@ -12,7 +12,7 @@ public class Form {
     public static int WIDTH = 350;
     public static int HEIGHT = 200;
     public static int X_OFFSET = 10;
-    public static int Y_OFFSET = 20;
+    public static int Y_OFFSET = 25;
 
     public static void createWindow() {
         JFrame jFrame = new JFrame("nzip Compressor");
