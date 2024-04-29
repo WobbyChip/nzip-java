@@ -58,6 +58,11 @@ public class Form {
         jFrame.setVisible(true);
         jFrame.setLocationRelativeTo(null);
 
+        Consumer<Float> progressCallback = progress -> {
+            progressBar1.setValue(Math.round(progress));
+            progressBar1.setString(String.format(Locale.US, "%.2f%%", progress));
+        };
+
         button1.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
             fileChooser.setCurrentDirectory(new File(System.getProperty("user.home") + "/Desktop"));
@@ -92,19 +97,14 @@ public class Form {
                 result_filename += compressionType.getExtension();
             }
 
-            Consumer<Float> callback = progress -> {
-                progressBar1.setValue(Math.round(progress));
-                progressBar1.setString(String.format(Locale.US, "%.2f%%", progress));
-            };
-
             try {
                 button2.setEnabled(false);
                 button3.setEnabled(false);
                 byte[] data = Files.readAllBytes(Paths.get(textField1.getText()));
                 int filesize = data.length;
-                if (!compressing) { data = compressionType.decompress(data, callback); }
-                if (compressing) { data = compressionType.compress(data, callback); }
-                if (compressing) label1.setText(String.format(Locale.US, "Compression => Type: %s, Ratio: %.2f", compressionType.getName(), ((float) filesize/data.length)));
+                if (!compressing) { data = compressionType.decompress(data, progressCallback); }
+                if (compressing) { data = compressionType.compress(data, progressCallback); }
+                if (compressing) { label1.setText(String.format(Locale.US, "Compression => Type: %s, Ratio: %.2f", compressionType.getName(), ((float) filesize/data.length))); }
                 Files.write(Paths.get(result_filename), data);
                 JOptionPane.showMessageDialog(jFrame, "File was compressed/decompressed!");
             } catch (Exception ex) {
@@ -118,21 +118,17 @@ public class Form {
         }).start());
         
         button3.addActionListener(e -> new Thread(() -> {
-        	if (textField1.getText().isEmpty()) { return; }
+        	if (textField1.getText().isEmpty()) { button1.doClick(); }
+            if (textField1.getText().isEmpty()) { return; }
             CompressionType compressionType = comboBox1.getItemAt(comboBox1.getSelectedIndex());
-
-            Consumer<Float> callback = progress -> {
-                progressBar1.setValue(Math.round(progress));
-                progressBar1.setString(String.format(Locale.US, "%.2f%%", progress));
-            };
 
             try {
             	button2.setEnabled(false);
             	button3.setEnabled(false);
                 byte[] data = Files.readAllBytes(Paths.get(textField1.getText()));
-                byte[] comp_data = compressionType.compress(data, progress -> callback.accept(progress/2f));
-                byte[] decomp_data = compressionType.decompress(comp_data, progress -> callback.accept(50f + progress/2f));
-                label1.setText(String.format(Locale.US, "Verification => Type: %s, Verify: %b", compressionType.getName(), Arrays.equals(data, decomp_data)));
+                byte[] comp_data = compressionType.compress(data, progress -> progressCallback.accept(progress/2f));
+                byte[] decomp_data = compressionType.decompress(comp_data, progress -> progressCallback.accept(50f + progress/2f));
+                label1.setText(String.format(Locale.US, "Verification => Type: %s, Ratio: %.2f, Verify: %b", compressionType.getName(), ((float) data.length/comp_data.length), Arrays.equals(data, decomp_data)));
                 JOptionPane.showMessageDialog(jFrame, "File was verified!");
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(jFrame, "Error reading/verifying file");
