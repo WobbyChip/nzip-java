@@ -5,6 +5,7 @@ import java.awt.*;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.function.Consumer;
 
@@ -40,10 +41,14 @@ public class Form {
         jFrame.getContentPane().add(button2);
 
         JProgressBar progressBar1 = new JProgressBar(0, 100);
-        progressBar1.setBounds(X_OFFSET+0, Y_OFFSET+60, 315, 25);
+        progressBar1.setBounds(X_OFFSET+0, Y_OFFSET+60, 200, 25);
         progressBar1.setStringPainted(true);
         jFrame.getContentPane().add(progressBar1);
 
+        JButton button3 = new JButton("Verify");
+        button3.setBounds(X_OFFSET+205, Y_OFFSET+60, 110, 25);
+        jFrame.getContentPane().add(button3);        
+        
         JLabel label1 = new JLabel("");
         label1.setBounds(X_OFFSET+0, Y_OFFSET+90, 315, 25);
         label1.setText("Compression => ...");
@@ -94,6 +99,7 @@ public class Form {
 
             try {
                 button2.setEnabled(false);
+                button3.setEnabled(false);
                 byte[] data = Files.readAllBytes(Paths.get(textField1.getText()));
                 int filesize = data.length;
                 if (!compressing) { data = compressionType.decompress(data, callback); }
@@ -103,10 +109,39 @@ public class Form {
                 JOptionPane.showMessageDialog(jFrame, "File was compressed/decompressed!");
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(jFrame, "Error reading/compressing file");
+                label1.setText("Error: " + ex.getMessage());
             }
 
             progressBar1.setValue(100);
             button2.setEnabled(true);
+            button3.setEnabled(true);
+        }).start());
+        
+        button3.addActionListener(e -> new Thread(() -> {
+        	if (textField1.getText().isEmpty()) { return; }
+            CompressionType compressionType = comboBox1.getItemAt(comboBox1.getSelectedIndex());
+
+            Consumer<Float> callback = progress -> {
+                progressBar1.setValue(Math.round(progress));
+                progressBar1.setString(String.format(Locale.US, "%.2f%%", progress));
+            };
+
+            try {
+            	button2.setEnabled(false);
+            	button3.setEnabled(false);
+                byte[] data = Files.readAllBytes(Paths.get(textField1.getText()));
+                byte[] comp_data = compressionType.compress(data, progress -> callback.accept(progress/2f));
+                byte[] decomp_data = compressionType.decompress(comp_data, progress -> callback.accept(50f + progress/2f));
+                label1.setText(String.format(Locale.US, "Verification => Type: %s, Verify: %b", compressionType.getName(), Arrays.equals(data, decomp_data)));
+                JOptionPane.showMessageDialog(jFrame, "File was verified!");
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(jFrame, "Error reading/verifying file");
+                label1.setText("Error: " + ex.getMessage());
+            }
+
+            progressBar1.setValue(100);
+            button2.setEnabled(true);
+            button3.setEnabled(true);
         }).start());
     }
 
