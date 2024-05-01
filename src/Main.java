@@ -10,10 +10,12 @@ import java.util.Locale;
 import java.util.Scanner;
 
 public class Main {
+    public static String ABOUT = "000RDB000 Jānis Programmētājs";
+
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
         String sourceFile, resultFile, firstFile, secondFile;
-        System.out.println("Enter command (comp, decomp, size, equal, about, exit): ");
+        System.out.println("Enter command (comp, decomp, size, equal, about, gui, exit): ");
 
         while (true) {
             switch (sc.next()) {
@@ -44,6 +46,7 @@ public class Main {
                     System.out.println(equal(firstFile, secondFile));
                     break;
                 case "about": about(); break;
+                case "gui": Form.createWindow(); break;
                 case "exit": System.exit(0); break;
             }
         }
@@ -101,6 +104,6 @@ public class Main {
     }
 
     public static void about() {
-        System.out.println("000RDB000 Jānis Programmētājs");
+        System.out.println(ABOUT);
     }
 }

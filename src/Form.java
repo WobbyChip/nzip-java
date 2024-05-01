@@ -13,7 +13,7 @@ public class Form {
     public static int WIDTH = 350;
     public static int HEIGHT = 200;
     public static int X_OFFSET = 10;
-    public static int Y_OFFSET = 25;
+    public static int Y_OFFSET = 35;
 
     public static void createWindow() {
         JFrame jFrame = new JFrame("nzip Compressor");
@@ -22,32 +22,45 @@ public class Form {
         jFrame.setLayout(null);
         jFrame.setResizable(false);
 
+        JButton button0 = new JButton("i");
+        button0.setMargin(new Insets(0, 0, 0, 0));
+        button0.setBounds(5, 5, 15, 15);
+        button0.setFocusPainted(false);
+        jFrame.getContentPane().add(button0);
+
         JTextField textField1 = new JTextField("");
-        textField1.setBounds(X_OFFSET+0, Y_OFFSET+0, 200, 25);
+        textField1.setMargin(new Insets(0, 0, 0, 0));
+        textField1.setBounds(X_OFFSET+0, Y_OFFSET+0, 210, 25);
         textField1.setEnabled(false);
         textField1.setDisabledTextColor(Color.GRAY);
         jFrame.getContentPane().add(textField1);
 
         JButton button1 = new JButton("Select File");
-        button1.setBounds(X_OFFSET+205, Y_OFFSET+0, 110, 25);
+        button1.setBounds(X_OFFSET+215, Y_OFFSET+0, 100, 25);
+        button1.setMargin(new Insets(0, 0, 0, 0));
+        button1.setFocusPainted(false);
         jFrame.getContentPane().add(button1);
 
         JComboBox<CompressionType> comboBox1 = new JComboBox<>(CompressionType.COMPRESSION_TYPES);
-        comboBox1.setBounds(X_OFFSET+0, Y_OFFSET+30, 200, 25);
+        comboBox1.setBounds(X_OFFSET+0, Y_OFFSET+30, 210, 25);
         jFrame.getContentPane().add(comboBox1);
 
         JButton button2 = new JButton("Compress");
-        button2.setBounds(X_OFFSET+205, Y_OFFSET+30, 110, 25);
+        button2.setMargin(new Insets(0, 0, 0, 0));
+        button2.setBounds(X_OFFSET+215, Y_OFFSET+30, 100, 25);
+        button2.setFocusPainted(false);
         jFrame.getContentPane().add(button2);
 
         JProgressBar progressBar1 = new JProgressBar(0, 100);
-        progressBar1.setBounds(X_OFFSET+0, Y_OFFSET+60, 200, 25);
+        progressBar1.setBounds(X_OFFSET+0, Y_OFFSET+60, 210, 25);
         progressBar1.setStringPainted(true);
         jFrame.getContentPane().add(progressBar1);
 
         JButton button3 = new JButton("Verify");
-        button3.setBounds(X_OFFSET+205, Y_OFFSET+60, 110, 25);
-        jFrame.getContentPane().add(button3);        
+        button3.setMargin(new Insets(0, 0, 0, 0));
+        button3.setBounds(X_OFFSET+215, Y_OFFSET+60, 100, 25);
+        button3.setFocusPainted(false);
+        jFrame.getContentPane().add(button3);
         
         JLabel label1 = new JLabel("");
         label1.setBounds(X_OFFSET+0, Y_OFFSET+90, 315, 25);
@@ -62,6 +75,10 @@ public class Form {
             progressBar1.setValue(Math.round(progress));
             progressBar1.setString(String.format(Locale.US, "%.2f%%", progress));
         };
+
+        button0.addActionListener(e -> {
+            JOptionPane.showMessageDialog(jFrame, Main.ABOUT, "About", JOptionPane.PLAIN_MESSAGE);
+        });
 
         button1.addActionListener(e -> {
             JFileChooser fileChooser = new JFileChooser();
