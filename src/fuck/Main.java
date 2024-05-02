@@ -24,35 +24,35 @@ public class Main {
 
         while (true) {
             switch (sc.next()) {
-                case "comp":
+                case "comp" -> {
                     System.out.print("source file name: ");
                     sourceFile = sc.next();
                     System.out.print("archive name: ");
                     resultFile = sc.next();
                     comp(sourceFile, resultFile);
-                    break;
-                case "decomp":
+                }
+                case "decomp" -> {
                     System.out.print("archive name: ");
                     sourceFile = sc.next();
                     System.out.print("file name: ");
                     resultFile = sc.next();
                     decomp(sourceFile, resultFile);
-                    break;
-                case "size":
+                }
+                case "size" -> {
                     System.out.print("file name: ");
                     sourceFile = sc.next();
                     size(sourceFile);
-                    break;
-                case "equal":
+                }
+                case "equal" -> {
                     System.out.print("first file name: ");
                     firstFile = sc.next();
                     System.out.print("second file name: ");
                     secondFile = sc.next();
                     System.out.println(equal(firstFile, secondFile));
-                    break;
-                case "about": about(); break;
-                case "gui": Form.createWindow(); break;
-                case "exit": System.exit(0); break;
+                }
+                case "about" -> about();
+                case "gui" -> Form.createWindow();
+                case "exit" -> System.exit(0);
             }
         }
     }
